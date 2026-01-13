@@ -13,7 +13,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Save, RotateCcw, AlertCircle, ShieldX, Phone, Calendar, Check, ChevronsUpDown, Clock } from 'lucide-react';
+import { 
+  Save, 
+  RotateCcw, 
+  AlertCircle, 
+  ShieldX, 
+  Phone, 
+  Calendar, 
+  Check, 
+  ChevronsUpDown, 
+  Clock,
+  MapPin,
+  FileText,
+  Users,
+  Building2,
+  Ticket as TicketIcon,
+  Sparkles
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useDropdownOptions, hsaToStoMap } from '@/hooks/useDropdownOptions';
@@ -34,6 +50,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface TicketFormData {
   hsa: string;
@@ -102,6 +119,19 @@ const REQUIRED_FIELDS: { field: keyof TicketFormData; label: string }[] = [
   { field: 'teknisi1', label: 'Teknisi' },
 ];
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.1,
+      duration: 0.4,
+      ease: "easeOut" as const
+    }
+  })
+};
+
 const ImportTicket = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -113,6 +143,7 @@ const ImportTicket = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Partial<Record<keyof TicketFormData, boolean>>>({});
   const [openTeknisi, setOpenTeknisi] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const filteredStoOptions = formData.hsa ? hsaToStoMap[formData.hsa] || [] : [];
   const createTicket = useCreateTicket();
 
@@ -143,16 +174,31 @@ const ImportTicket = () => {
   if (user?.role === 'guest') {
     return (
       <Layout>
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <ShieldX className="w-16 h-16 text-muted-foreground mb-4" />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="flex flex-col items-center justify-center py-16 text-center"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mb-6"
+          >
+            <ShieldX className="w-10 h-10 text-destructive" />
+          </motion.div>
           <h2 className="text-2xl font-bold mb-2">Akses Ditolak</h2>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-muted-foreground mb-6 max-w-md">
             Role Guest hanya dapat melihat data, tidak dapat menambah atau mengedit tiket.
           </p>
-          <Button onClick={() => navigate('/dashboard')}>
+          <Button 
+            onClick={() => navigate('/dashboard')}
+            className="btn-ripple gap-2"
+          >
             Kembali ke Dashboard
           </Button>
-        </div>
+        </motion.div>
       </Layout>
     );
   }
@@ -204,6 +250,10 @@ const ImportTicket = () => {
     setFormData(emptyForm);
     setErrors({});
     setTouched({});
+    toast({
+      title: "Form Direset",
+      description: "Semua field telah dikosongkan",
+    });
   };
 
   const handleSubmit = async () => {
@@ -215,6 +265,8 @@ const ImportTicket = () => {
       });
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       const jamOpen = new Date(formData.reportDate);
@@ -259,6 +311,8 @@ const ImportTicket = () => {
         description: "Terjadi kesalahan saat menyimpan data ke database.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -285,7 +339,7 @@ const ImportTicket = () => {
     const required = isFieldRequired(field);
     
     return (
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <Label className="text-xs font-medium text-muted-foreground">
           {label} {required && <span className="text-destructive">*</span>}
         </Label>
@@ -296,21 +350,39 @@ const ImportTicket = () => {
             markTouched(field);
           }}
         >
-          <SelectTrigger className={`h-9 ${error ? 'border-destructive ring-1 ring-destructive' : ''}`}>
+          <SelectTrigger 
+            className={cn(
+              "h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200",
+              error && "border-destructive ring-2 ring-destructive/20 bg-destructive/5"
+            )}
+          >
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
-          <SelectContent className="bg-background border shadow-lg z-50 max-h-[180px]">
+          <SelectContent className="bg-popover border shadow-lg z-50 max-h-[200px]">
             {options.map(opt => (
-              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+              <SelectItem 
+                key={opt} 
+                value={opt}
+                className="cursor-pointer hover:bg-accent transition-colors"
+              >
+                {opt}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        {error && (
-          <p className="text-xs text-destructive flex items-center gap-1 mt-1">
-            <AlertCircle className="w-3 h-3" />
-            {error}
-          </p>
-        )}
+        <AnimatePresence>
+          {error && (
+            <motion.p 
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className="text-xs text-destructive flex items-center gap-1"
+            >
+              <AlertCircle className="w-3 h-3" />
+              {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
       </div>
     );
   };
@@ -320,34 +392,52 @@ const ImportTicket = () => {
     field, 
     placeholder = "",
     type = "text",
+    icon: Icon,
   }: { 
     label: string; 
     field: keyof TicketFormData; 
     placeholder?: string;
     type?: string;
+    icon?: React.ComponentType<{ className?: string }>;
   }) => {
     const error = getFieldError(field);
     const required = isFieldRequired(field);
     
     return (
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <Label className="text-xs font-medium text-muted-foreground">
           {label} {required && <span className="text-destructive">*</span>}
         </Label>
-        <Input
-          type={type}
-          value={formData[field]}
-          onChange={(e) => updateField(field, e.target.value)}
-          onBlur={() => markTouched(field)}
-          placeholder={placeholder}
-          className={`h-9 ${error ? 'border-destructive ring-1 ring-destructive' : ''}`}
-        />
-        {error && (
-          <p className="text-xs text-destructive flex items-center gap-1 mt-1">
-            <AlertCircle className="w-3 h-3" />
-            {error}
-          </p>
-        )}
+        <div className="relative">
+          {Icon && (
+            <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          )}
+          <Input
+            type={type}
+            value={formData[field]}
+            onChange={(e) => updateField(field, e.target.value)}
+            onBlur={() => markTouched(field)}
+            placeholder={placeholder}
+            className={cn(
+              "h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200",
+              Icon && "pl-10",
+              error && "border-destructive ring-2 ring-destructive/20 bg-destructive/5"
+            )}
+          />
+        </div>
+        <AnimatePresence>
+          {error && (
+            <motion.p 
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className="text-xs text-destructive flex items-center gap-1"
+            >
+              <AlertCircle className="w-3 h-3" />
+              {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
       </div>
     );
   };
@@ -373,377 +463,588 @@ const ImportTicket = () => {
 
   return (
     <Layout>
-      <div className="space-y-6 max-w-5xl mx-auto">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold">Input Tiket Baru</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Masukkan data awal tiket gangguan. Progress & status akan diupdate kemudian.
-            </p>
+      <div className="space-y-6 max-w-5xl mx-auto pb-8">
+        {/* Header Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        >
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <TicketIcon className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+                Input Tiket Baru
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                Masukkan data awal tiket gangguan. Progress & status akan diupdate kemudian.
+              </p>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleReset} className="gap-2">
+          <div className="flex gap-2 shrink-0">
+            <Button 
+              variant="outline" 
+              onClick={handleReset} 
+              className="gap-2 icon-hover-spin"
+            >
               <RotateCcw className="w-4 h-4" />
-              Reset
+              <span className="hidden sm:inline">Reset</span>
             </Button>
-            <Button onClick={handleSubmit} className="gap-2">
-              <Save className="w-4 h-4" />
-              Simpan
+            <Button 
+              onClick={handleSubmit} 
+              disabled={isSubmitting}
+              className="gap-2 btn-ripple"
+            >
+              {isSubmitting ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <Sparkles className="w-4 h-4" />
+                </motion.div>
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              <span>{isSubmitting ? 'Menyimpan...' : 'Simpan'}</span>
             </Button>
           </div>
-        </div>
+        </motion.div>
 
-        {hasErrors && Object.keys(touched).length > 0 && (
-          <Card className="border-destructive bg-destructive/5">
-            <CardContent className="py-3">
-              <div className="flex items-start gap-2 text-destructive">
-                <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-sm">Mohon lengkapi field berikut:</p>
-                  <ul className="text-xs mt-1 list-disc list-inside">
-                    {Object.entries(errors).map(([field, message]) => (
-                      <li key={field}>{message}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="grid gap-6">
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base">Lokasi & Kategori</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <SelectField label="HSA" field="hsa" options={DROPDOWN_OPTIONS.hsa} />
-                <SelectField label="STO" field="sto" options={filteredStoOptions} />
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    ODC <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    value={formData.odc}
-                    onChange={(e) => updateField('odc', e.target.value)}
-                    onBlur={() => markTouched('odc')}
-                    placeholder="Masukkan ODC"
-                    className={`h-9 ${errors.odc && touched.odc ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                  />
-                  {errors.odc && touched.odc && (
-                    <p className="text-xs text-destructive flex items-center gap-1 mt-1">
-                      <AlertCircle className="w-3 h-3" />
-                      {errors.odc}
-                    </p>
-                  )}
-                </div>
-                <SelectField label="Stake Holder" field="stakeHolder" options={DROPDOWN_OPTIONS.stakeHolder} />
-                <SelectField label="Jenis Pelanggan" field="jenisPelanggan" options={DROPDOWN_OPTIONS.jenisPelanggan} />
-                <SelectField label="Saverity" field="kategori" options={DROPDOWN_OPTIONS.kategori} />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base">Informasi Tiket</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    No. Tiket (INC) <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    value={formData.tiket}
-                    onChange={(e) => updateField('tiket', e.target.value)}
-                    onBlur={() => markTouched('tiket')}
-                    placeholder="INC12345678"
-                    className={`h-9 ${errors.tiket && touched.tiket ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                  />
-                  {errors.tiket && touched.tiket && (
-                    <p className="text-xs text-destructive flex items-center gap-1 mt-1">
-                      <AlertCircle className="w-3 h-3" />
-                      {errors.tiket}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    Tiket TACC
-                  </Label>
-                  <Input
-                    value={formData.tiketTacc}
-                    onChange={(e) => updateField('tiketTacc', e.target.value)}
-                    onBlur={() => markTouched('tiketTacc')}
-                    placeholder="Optional"
-                    className="h-9"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    Induk GAMAS
-                  </Label>
-                  <Input
-                    value={formData.indukGamas}
-                    onChange={(e) => updateField('indukGamas', e.target.value)}
-                    onBlur={() => markTouched('indukGamas')}
-                    placeholder="Optional"
-                    className="h-9"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    KJD
-                  </Label>
-                  <Input
-                    value={formData.kjd}
-                    onChange={(e) => updateField('kjd', e.target.value)}
-                    onBlur={() => markTouched('kjd')}
-                    placeholder="KJD12345"
-                    className="h-9"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    Report Date <span className="text-destructive">*</span>
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      type="datetime-local"
-                      value={formData.reportDate}
-                      onChange={(e) => updateField('reportDate', e.target.value)}
-                      className="pl-9 block w-full"
-                    />
-                    <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-9 w-9 text-muted-foreground hover:text-primary"
-                      onClick={setReportDateToNow}
-                      title="Set waktu saat ini"
-                    >
-                      <Clock className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  {errors.reportDate && touched.reportDate && (
-                    <p className="text-xs text-destructive flex items-center gap-1 mt-1">
-                      <AlertCircle className="w-3 h-3" />
-                      {errors.reportDate}
-                    </p>
-                  )}
-                </div>
-                <InputField label="TTR Target (Jam)" field="ttrTarget" placeholder="Otomatis..." />
-              </div>
-              <div className="mt-4">
-                <Label className="text-xs font-medium text-muted-foreground">Summary</Label>
-                <Textarea
-                  value={formData.summary}
-                  onChange={(e) => updateField('summary', e.target.value)}
-                  placeholder="TSEL_METRO_PBR178_PEKANBARU..."
-                  className="mt-1.5 min-h-[60px]"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base">Pelanggan & Site</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    ID Pelanggan / Site <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    value={formData.idPelanggan}
-                    onChange={(e) => updateField('idPelanggan', e.target.value)}
-                    onBlur={() => markTouched('idPelanggan')}
-                    placeholder="PBR123"
-                    className={`h-9 ${errors.idPelanggan && touched.idPelanggan ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                    />
-                    {errors.idPelanggan && touched.idPelanggan && (
-                      <p className="text-xs text-destructive flex items-center gap-1 mt-1">
-                        <AlertCircle className="w-3 h-3" />
-                        {errors.idPelanggan}
-                      </p>
-                    )}
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    Nama Pelanggan / Site <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    value={formData.namaPelanggan}
-                    onChange={(e) => updateField('namaPelanggan', e.target.value)}
-                    onBlur={() => markTouched('namaPelanggan')}
-                    placeholder="PEKANBARU..."
-                    className={`h-9 ${errors.namaPelanggan && touched.namaPelanggan ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                    />
-                    {errors.namaPelanggan && touched.namaPelanggan && (
-                      <p className="text-xs text-destructive flex items-center gap-1 mt-1">
-                        <AlertCircle className="w-3 h-3" />
-                        {errors.namaPelanggan}
-                      </p>
-                    )}
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    DATEK <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    value={formData.datek}
-                    onChange={(e) => updateField('datek', e.target.value)}
-                    onBlur={() => markTouched('datek')}
-                    placeholder="PBR/GPON01-D1-PBB-1"
-                    className={`h-9 ${errors.datek && touched.datek ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                    />
-                    {errors.datek && touched.datek && (
-                      <p className="text-xs text-destructive flex items-center gap-1 mt-1">
-                        <AlertCircle className="w-3 h-3" />
-                        {errors.datek}
-                      </p>
-                    )}
-                </div>
-                <SelectField label="LOS / Non LOS" field="losNonLos" options={DROPDOWN_OPTIONS.losNonLos} />
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    Site Impact
-                  </Label>
-                  <Input
-                    value={formData.siteImpact}
-                    onChange={(e) => updateField('siteImpact', e.target.value)}
-                    onBlur={() => markTouched('siteImpact')}
-                    placeholder="PBR456"
-                    className="h-9"
-                  />
-                </div>
-                <SelectField label="Class Site" field="classSite" options={DROPDOWN_OPTIONS.classSite} />
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    Koordinat
-                  </Label>
-                  <Input
-                    value={formData.koordinat}
-                    onChange={(e) => updateField('koordinat', e.target.value)}
-                    onBlur={() => markTouched('koordinat')}
-                    placeholder="-0.123456, 101.123456"
-                    className="h-9"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    Histori 6 Bulan
-                  </Label>
-                  <Input
-                    value={formData.histori6Bulan}
-                    onChange={(e) => updateField('histori6Bulan', e.target.value)}
-                    onBlur={() => markTouched('histori6Bulan')}
-                    placeholder="10x"
-                    className="h-9"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base">Teknisi & Tim</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label className={`text-xs font-medium ${errors.teknisi1 && touched.teknisi1 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                    Teknisi <span className="text-destructive">*</span>
-                  </Label>
-                  <Popover open={openTeknisi} onOpenChange={setOpenTeknisi}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={openTeknisi}
-                        className={cn(
-                          "w-full justify-between h-9 px-3 font-normal",
-                          !formData.teknisi1 && "text-muted-foreground",
-                          errors.teknisi1 && touched.teknisi1 && "border-destructive ring-1 ring-destructive hover:bg-background"
-                        )}
-                      >
-                        {formData.teknisi1
-                          ? activeTeknisi.find((teknisi) => teknisi.name === formData.teknisi1)?.name
-                          : "Pilih Teknisi..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Cari teknisi..." />
-                        <CommandList>
-                          <CommandEmpty>Teknisi tidak ditemukan.</CommandEmpty>
-                          <CommandGroup>
-                            {activeTeknisi.map((teknisi) => (
-                              <CommandItem
-                                key={teknisi.id}
-                                value={teknisi.name}
-                                onSelect={(currentValue) => {
-                                  updateField('teknisi1', teknisi.name);
-                                  setOpenTeknisi(false);
-                                  if (!touched.teknisi1) {
-                                    markTouched('teknisi1');
-                                  }
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    formData.teknisi1 === teknisi.name ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                <div className="flex flex-col">
-                                  <span>{teknisi.name}</span>
-                                  <span className="text-xs text-muted-foreground">{teknisi.area}</span>
-                                </div>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  {formData.teknisi1 && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                      <Phone className="w-3 h-3" />
-                      {activeTeknisi.find(t => t.name === formData.teknisi1)?.phone || '-'}
+        {/* Error Summary */}
+        <AnimatePresence>
+          {hasErrors && Object.keys(touched).length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card className="border-destructive/50 bg-destructive/5 overflow-hidden">
+                <CardContent className="py-4">
+                  <div className="flex items-start gap-3 text-destructive">
+                    <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                      <AlertCircle className="w-4 h-4" />
                     </div>
-                  )}
-                  {errors.teknisi1 && touched.teknisi1 && (
-                    <p className="text-xs text-destructive flex items-center gap-1 mt-1">
-                      <AlertCircle className="w-3 h-3" />
-                      {errors.teknisi1}
-                    </p>
-                  )}
+                    <div>
+                      <p className="font-semibold text-sm">Mohon lengkapi field berikut:</p>
+                      <ul className="text-xs mt-2 space-y-1">
+                        {Object.entries(errors).map(([field, message]) => (
+                          <li key={field} className="flex items-center gap-1.5">
+                            <span className="w-1 h-1 rounded-full bg-destructive" />
+                            {message}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Form Cards */}
+        <div className="grid gap-6">
+          {/* Location & Category Card */}
+          <motion.div
+            custom={0}
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <Card className="glass-card card-hover overflow-hidden">
+              <CardHeader className="pb-4 border-b border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-primary" />
+                  </div>
+                  <CardTitle className="text-base font-semibold">Lokasi & Kategori</CardTitle>
                 </div>
-                <SelectField label="Tim" field="tim" options={DROPDOWN_OPTIONS.tim} />
-              </div>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  <SelectField label="HSA" field="hsa" options={DROPDOWN_OPTIONS.hsa} />
+                  <SelectField label="STO" field="sto" options={filteredStoOptions} />
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      ODC <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      value={formData.odc}
+                      onChange={(e) => updateField('odc', e.target.value)}
+                      onBlur={() => markTouched('odc')}
+                      placeholder="Masukkan ODC"
+                      className={cn(
+                        "h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200",
+                        errors.odc && touched.odc && "border-destructive ring-2 ring-destructive/20 bg-destructive/5"
+                      )}
+                    />
+                    <AnimatePresence>
+                      {errors.odc && touched.odc && (
+                        <motion.p 
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          className="text-xs text-destructive flex items-center gap-1"
+                        >
+                          <AlertCircle className="w-3 h-3" />
+                          {errors.odc}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <SelectField label="Stake Holder" field="stakeHolder" options={DROPDOWN_OPTIONS.stakeHolder} />
+                  <SelectField label="Jenis Pelanggan" field="jenisPelanggan" options={DROPDOWN_OPTIONS.jenisPelanggan} />
+                  <SelectField label="Saverity" field="kategori" options={DROPDOWN_OPTIONS.kategori} />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Ticket Information Card */}
+          <motion.div
+            custom={1}
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <Card className="glass-card card-hover overflow-hidden">
+              <CardHeader className="pb-4 border-b border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-accent-foreground" />
+                  </div>
+                  <CardTitle className="text-base font-semibold">Informasi Tiket</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      No. Tiket (INC) <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <TicketIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        value={formData.tiket}
+                        onChange={(e) => updateField('tiket', e.target.value.toUpperCase())}
+                        onBlur={() => markTouched('tiket')}
+                        placeholder="INC12345678"
+                        className={cn(
+                          "h-10 pl-10 font-mono bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200",
+                          errors.tiket && touched.tiket && "border-destructive ring-2 ring-destructive/20 bg-destructive/5"
+                        )}
+                      />
+                    </div>
+                    <AnimatePresence>
+                      {errors.tiket && touched.tiket && (
+                        <motion.p 
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          className="text-xs text-destructive flex items-center gap-1"
+                        >
+                          <AlertCircle className="w-3 h-3" />
+                          {errors.tiket}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      Tiket TACC
+                    </Label>
+                    <Input
+                      value={formData.tiketTacc}
+                      onChange={(e) => updateField('tiketTacc', e.target.value)}
+                      onBlur={() => markTouched('tiketTacc')}
+                      placeholder="Optional"
+                      className="h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      Induk GAMAS
+                    </Label>
+                    <Input
+                      value={formData.indukGamas}
+                      onChange={(e) => updateField('indukGamas', e.target.value)}
+                      onBlur={() => markTouched('indukGamas')}
+                      placeholder="Optional"
+                      className="h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      KJD
+                    </Label>
+                    <Input
+                      value={formData.kjd}
+                      onChange={(e) => updateField('kjd', e.target.value)}
+                      onBlur={() => markTouched('kjd')}
+                      placeholder="KJD12345"
+                      className="h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      Report Date <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative group">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Input
+                        type="datetime-local"
+                        value={formData.reportDate}
+                        onChange={(e) => updateField('reportDate', e.target.value)}
+                        className={cn(
+                          "h-10 pl-10 pr-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200",
+                          errors.reportDate && touched.reportDate && "border-destructive ring-2 ring-destructive/20 bg-destructive/5"
+                        )}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-10 w-10 text-muted-foreground hover:text-primary transition-colors icon-hover-bounce"
+                        onClick={setReportDateToNow}
+                        title="Set waktu saat ini"
+                      >
+                        <Clock className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <AnimatePresence>
+                      {errors.reportDate && touched.reportDate && (
+                        <motion.p 
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          className="text-xs text-destructive flex items-center gap-1"
+                        >
+                          <AlertCircle className="w-3 h-3" />
+                          {errors.reportDate}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <InputField label="TTR Target (Jam)" field="ttrTarget" placeholder="Otomatis..." />
+                </div>
+                <div className="mt-4">
+                  <Label className="text-xs font-medium text-muted-foreground">Summary</Label>
+                  <Textarea
+                    value={formData.summary}
+                    onChange={(e) => updateField('summary', e.target.value)}
+                    placeholder="TSEL_METRO_PBR178_PEKANBARU..."
+                    className="mt-2 min-h-[80px] bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200 resize-none"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Customer & Site Card */}
+          <motion.div
+            custom={2}
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <Card className="glass-card card-hover overflow-hidden">
+              <CardHeader className="pb-4 border-b border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-status-closed/10 flex items-center justify-center">
+                    <Building2 className="w-4 h-4 text-status-closed" />
+                  </div>
+                  <CardTitle className="text-base font-semibold">Pelanggan & Site</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      ID Pelanggan / Site <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      value={formData.idPelanggan}
+                      onChange={(e) => updateField('idPelanggan', e.target.value)}
+                      onBlur={() => markTouched('idPelanggan')}
+                      placeholder="PBR123"
+                      className={cn(
+                        "h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200",
+                        errors.idPelanggan && touched.idPelanggan && "border-destructive ring-2 ring-destructive/20 bg-destructive/5"
+                      )}
+                    />
+                    <AnimatePresence>
+                      {errors.idPelanggan && touched.idPelanggan && (
+                        <motion.p 
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          className="text-xs text-destructive flex items-center gap-1"
+                        >
+                          <AlertCircle className="w-3 h-3" />
+                          {errors.idPelanggan}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      Nama Pelanggan / Site <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      value={formData.namaPelanggan}
+                      onChange={(e) => updateField('namaPelanggan', e.target.value)}
+                      onBlur={() => markTouched('namaPelanggan')}
+                      placeholder="PEKANBARU..."
+                      className={cn(
+                        "h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200",
+                        errors.namaPelanggan && touched.namaPelanggan && "border-destructive ring-2 ring-destructive/20 bg-destructive/5"
+                      )}
+                    />
+                    <AnimatePresence>
+                      {errors.namaPelanggan && touched.namaPelanggan && (
+                        <motion.p 
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          className="text-xs text-destructive flex items-center gap-1"
+                        >
+                          <AlertCircle className="w-3 h-3" />
+                          {errors.namaPelanggan}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      DATEK <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      value={formData.datek}
+                      onChange={(e) => updateField('datek', e.target.value)}
+                      onBlur={() => markTouched('datek')}
+                      placeholder="PBR/GPON01-D1-PBB-1"
+                      className={cn(
+                        "h-10 font-mono text-sm bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200",
+                        errors.datek && touched.datek && "border-destructive ring-2 ring-destructive/20 bg-destructive/5"
+                      )}
+                    />
+                    <AnimatePresence>
+                      {errors.datek && touched.datek && (
+                        <motion.p 
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          className="text-xs text-destructive flex items-center gap-1"
+                        >
+                          <AlertCircle className="w-3 h-3" />
+                          {errors.datek}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <SelectField label="LOS / Non LOS" field="losNonLos" options={DROPDOWN_OPTIONS.losNonLos} />
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      Site Impact
+                    </Label>
+                    <Input
+                      value={formData.siteImpact}
+                      onChange={(e) => updateField('siteImpact', e.target.value)}
+                      onBlur={() => markTouched('siteImpact')}
+                      placeholder="PBR456"
+                      className="h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200"
+                    />
+                  </div>
+                  <SelectField label="Class Site" field="classSite" options={DROPDOWN_OPTIONS.classSite} />
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      Koordinat
+                    </Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        value={formData.koordinat}
+                        onChange={(e) => updateField('koordinat', e.target.value)}
+                        onBlur={() => markTouched('koordinat')}
+                        placeholder="-0.123456, 101.123456"
+                        className="h-10 pl-10 font-mono text-sm bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      Histori 6 Bulan
+                    </Label>
+                    <Input
+                      value={formData.histori6Bulan}
+                      onChange={(e) => updateField('histori6Bulan', e.target.value)}
+                      onBlur={() => markTouched('histori6Bulan')}
+                      placeholder="10x"
+                      className="h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Technician & Team Card */}
+          <motion.div
+            custom={3}
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <Card className="glass-card card-hover overflow-hidden">
+              <CardHeader className="pb-4 border-b border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-status-assigned/10 flex items-center justify-center">
+                    <Users className="w-4 h-4 text-status-assigned" />
+                  </div>
+                  <CardTitle className="text-base font-semibold">Teknisi & Tim</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className={cn(
+                      "text-xs font-medium",
+                      errors.teknisi1 && touched.teknisi1 ? "text-destructive" : "text-muted-foreground"
+                    )}>
+                      Teknisi <span className="text-destructive">*</span>
+                    </Label>
+                    <Popover open={openTeknisi} onOpenChange={setOpenTeknisi}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openTeknisi}
+                          className={cn(
+                            "w-full justify-between h-10 px-3 font-normal bg-muted/50 border-transparent hover:border-border hover:bg-muted/70 transition-all duration-200",
+                            !formData.teknisi1 && "text-muted-foreground",
+                            errors.teknisi1 && touched.teknisi1 && "border-destructive ring-2 ring-destructive/20 bg-destructive/5 hover:bg-destructive/5"
+                          )}
+                        >
+                          {formData.teknisi1
+                            ? activeTeknisi.find((teknisi) => teknisi.name === formData.teknisi1)?.name
+                            : "Pilih Teknisi..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Cari teknisi..." className="h-10" />
+                          <CommandList>
+                            <CommandEmpty>Teknisi tidak ditemukan.</CommandEmpty>
+                            <CommandGroup>
+                              {activeTeknisi.map((teknisi) => (
+                                <CommandItem
+                                  key={teknisi.id}
+                                  value={teknisi.name}
+                                  onSelect={(currentValue) => {
+                                    updateField('teknisi1', teknisi.name);
+                                    setOpenTeknisi(false);
+                                    if (!touched.teknisi1) {
+                                      markTouched('teknisi1');
+                                    }
+                                  }}
+                                  className="cursor-pointer"
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4 transition-opacity",
+                                      formData.teknisi1 === teknisi.name ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{teknisi.name}</span>
+                                    <span className="text-xs text-muted-foreground">{teknisi.area}</span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <AnimatePresence>
+                      {formData.teknisi1 && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 px-3 py-2 rounded-md"
+                        >
+                          <Phone className="w-3 h-3" />
+                          <span>{activeTeknisi.find(t => t.name === formData.teknisi1)?.phone || '-'}</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    <AnimatePresence>
+                      {errors.teknisi1 && touched.teknisi1 && (
+                        <motion.p 
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          className="text-xs text-destructive flex items-center gap-1"
+                        >
+                          <AlertCircle className="w-3 h-3" />
+                          {errors.teknisi1}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <SelectField label="Tim" field="tim" options={DROPDOWN_OPTIONS.tim} />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
-        <div className="flex justify-end gap-2 pb-6">
-          <Button variant="outline" onClick={handleReset}>
+        {/* Footer Actions */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="flex justify-end gap-3 pt-4"
+        >
+          <Button 
+            variant="outline" 
+            onClick={handleReset}
+            className="gap-2 icon-hover-spin"
+          >
+            <RotateCcw className="w-4 h-4" />
             Reset Form
           </Button>
-          <Button onClick={handleSubmit} className="gap-2">
-            <Save className="w-4 h-4" />
-            Simpan Tiket
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isSubmitting}
+            className="gap-2 btn-ripple min-w-[140px]"
+          >
+            {isSubmitting ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <Sparkles className="w-4 h-4" />
+                </motion.div>
+                <span>Menyimpan...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Simpan Tiket</span>
+              </>
+            )}
           </Button>
-        </div>
+        </motion.div>
       </div>
     </Layout>
   );
