@@ -46,6 +46,7 @@ export const generateTeknisiId = (): string => {
 
 export const useTeknisi = () => {
   const [teknisiList, setTeknisiList] = useState<Teknisi[]>(getTeknisiList);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const handleUpdate = () => {
@@ -59,8 +60,12 @@ export const useTeknisi = () => {
       }
     });
 
+    // Simulate loading for smooth UX
+    const timer = setTimeout(() => setIsLoaded(true), 300);
+
     return () => {
       window.removeEventListener('teknisi-updated', handleUpdate);
+      clearTimeout(timer);
     };
   }, []);
 
@@ -103,6 +108,7 @@ export const useTeknisi = () => {
   return {
     teknisiList,
     activeTeknisi,
+    isLoaded,
     refreshTeknisi,
     addTeknisi,
     updateTeknisi,
