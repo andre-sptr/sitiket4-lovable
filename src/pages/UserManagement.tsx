@@ -61,6 +61,8 @@ import { User, UserRole } from '@/types/ticket';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import SEO from '@/components/SEO';
+import { Separator } from '@/components/ui/separator';
 
 const roleIcons = {
   admin: Shield,
@@ -87,6 +89,8 @@ const roleIconColors = {
 };
 
 interface UserFormData {
+  email: string;
+  password?: string;
   name: string;
   role: UserRole;
   phone: string;
@@ -95,6 +99,8 @@ interface UserFormData {
 }
 
 const initialFormData: UserFormData = {
+  email: '',  
+  password: '',
   name: '',
   role: 'guest',
   phone: '',
@@ -170,8 +176,10 @@ const UserManagement = () => {
   };
 
   const openEditDialog = (user: User) => {
+    console.log("Data User yang diedit:", user);
     setEditingUser(user);
     setFormData({
+      email: user.email || '',
       name: user.name,
       role: user.role,
       phone: user.phone || '',
@@ -187,8 +195,13 @@ const UserManagement = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.name.trim()) {
-      toast.error('Nama pengguna harus diisi');
+    if (!formData.name.trim() || !formData.email.trim()) {
+      toast.error('Nama dan Email harus diisi');
+      return;
+    }
+
+    if (!editingUser && (!formData.password || formData.password.length < 6)) {
+      toast.error('Password wajib diisi minimal 6 karakter');
       return;
     }
     
@@ -221,15 +234,10 @@ const UserManagement = () => {
     }
   };
 
-  const handleToggleActive = (user: User) => {
-    toggleUserActive(user.id);
-    toast.success(`Pengguna ${user.isActive ? 'dinonaktifkan' : 'diaktifkan'}`);
-  };
-
-  // Access denied for non-admin users (except viewing)
   if (currentUser?.role === 'guest') {
     return (
       <Layout>
+        <SEO title="Manajemen Pengguna" />
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -261,6 +269,7 @@ const UserManagement = () => {
 
   return (
     <Layout>
+      <SEO title="Manajemen Pengguna" />
       <div className="space-y-6 max-w-6xl mx-auto pb-8">
         {/* Header Section */}
         <motion.div 
@@ -384,6 +393,7 @@ const UserManagement = () => {
                 </div>
               )}
             </CardHeader>
+            <Separator/>
             <CardContent>
               {!isLoaded ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -405,6 +415,7 @@ const UserManagement = () => {
                     {filteredUsers.map((user, index) => {
                       const Icon = roleIcons[user.role];
                       const roleColor = roleColors[user.role];
+                      const iconColorClass = roleIconColors[user.role];
                       
                       return (
                         <motion.div 
@@ -415,93 +426,114 @@ const UserManagement = () => {
                           exit="exit"
                           variants={userCardVariants}
                           layout
-                          className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border border-border bg-card shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 gap-4 card-interactive"
+                          className={cn(
+                            "group flex flex-col justify-between rounded-xl border bg-card shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden",
+                            user.isActive 
+                              ? "border-border hover:border-primary/40" 
+                              : "border-border/50 opacity-75 hover:opacity-100"
+                          )}
                         >
-                          <div className="flex items-center gap-4 w-full sm:flex-1 sm:min-w-0">
-                            <motion.div 
-                              whileHover={{ scale: 1.05 }}
-                              className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/10 text-primary rounded-full flex items-center justify-center text-lg font-semibold shrink-0"
-                            >
-                              {user.name.charAt(0).toUpperCase()}
-                            </motion.div>
-
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <p className="font-medium truncate">{user.name}</p>
+                          {/* CARD BODY */}
+                          <div className="p-5 flex-1">
+                            <div className="flex items-start justify-between mb-4">
+                              <motion.div 
+                                whileHover={{ scale: 1.05 }}
+                                className={cn(
+                                  "w-12 h-12 rounded-full flex items-center justify-center text-lg font-semibold shrink-0 shadow-sm",
+                                  iconColorClass
+                                )}
+                              >
+                                {user.name.charAt(0).toUpperCase()}
+                              </motion.div>
+                              
+                              <div className="mt-2 flex items-center">
                                 <Badge 
                                   variant="outline" 
-                                  className={cn("gap-1 whitespace-nowrap", roleColor)}
+                                  className={cn("gap-1.5 font-normal", roleColor)}
                                 >
                                   <Icon className="w-3 h-3" />
-                                  <span className="hidden sm:inline">
-                                    {roleLabels[user.role]}
-                                  </span>
+                                  {roleLabels[user.role]}
                                 </Badge>
-                                {!user.isActive && (
-                                  <Badge variant="secondary" className="whitespace-nowrap">Nonaktif</Badge>
-                                )}
+                              </div>
+                            </div>
+
+                            <div className="space-y-3">
+                              <div>
+                                <h3 className="font-semibold text-lg leading-tight group-hover:text-primary transition-colors truncate">
+                                  {user.name}
+                                </h3>
                               </div>
                               
-                              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1.5 text-sm text-muted-foreground">
-                                {user.phone && (
-                                  <span className="flex items-center gap-1">
-                                    <Phone className="w-3 h-3" />
-                                    {user.phone}
-                                  </span>
+                              <div className="space-y-2 pt-3 mt-1 border-t border-dashed">
+                                {user.area ? (
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <MapPin className="w-4 h-4 text-primary/60 shrink-0" />
+                                    <span className="truncate">{user.area}</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground italic">
+                                    <MapPin className="w-4 h-4 text-muted shrink-0" />
+                                    <span>-</span>
+                                  </div>
                                 )}
-                                {user.area && (
-                                  <span className="flex items-center gap-1">
-                                    <MapPin className="w-3 h-3" />
-                                    {user.area}
-                                  </span>
+                                
+                                {user.phone ? (
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Phone className="w-4 h-4 text-primary/60 shrink-0" />
+                                    <span>{user.phone}</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground italic">
+                                    <Phone className="w-4 h-4 text-muted shrink-0" />
+                                    <span>-</span>
+                                  </div>
                                 )}
                               </div>
                             </div>
                           </div>
 
-                          <div className="flex items-center self-end sm:self-auto shrink-0">
-                            {user.phone && (
-                              <>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  className="text-primary hover:text-primary hover:bg-primary/10 icon-hover-bounce"
-                                  onClick={() => handleCall(user.phone!)}
-                                  title="Telepon"
-                                >
-                                  <Phone className="w-4 h-4" />
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 icon-hover-bounce"
-                                  onClick={() => handleWhatsApp(user.phone!)}
-                                  title="WhatsApp"
-                                >
-                                  <svg 
-                                    viewBox="0 0 24 24" 
-                                    fill="currentColor" 
-                                    className="w-4 h-4" 
-                                    xmlns="http://www.w3.org/2000/svg"
+                          {/* CARD FOOTER / ACTIONS */}
+                          <div className="p-3 bg-muted/30 border-t flex items-center justify-between gap-2">
+                            <div className="flex gap-2">
+                              {user.phone && (
+                                <>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    className="h-8 w-8 p-0 rounded-full border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600 dark:border-emerald-800 dark:hover:bg-emerald-950"
+                                    onClick={() => handleWhatsApp(user.phone!)}
+                                    title="WhatsApp"
                                   >
-                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.008-.57-.008-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                                  </svg>
-                                </Button>
-                              </>
-                            )}
+                                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.008-.57-.008-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                                    </svg>
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    className="h-8 w-8 p-0 rounded-full hover:bg-primary/10 hover:text-primary"
+                                    onClick={() => handleCall(user.phone!)}
+                                    title="Telepon"
+                                  >
+                                    <Phone className="w-4 h-4" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
 
                             {isAdmin && (
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button 
                                     variant="ghost" 
-                                    size="icon"
-                                    className="icon-hover-wiggle"
+                                    size="sm"
+                                    className="h-8 px-2 text-muted-foreground hover:text-foreground"
                                   >
-                                    <MoreVertical className="w-4 h-4" />
+                                    <span className="text-xs mr-1">Opsi</span>
+                                    <MoreVertical className="w-3 h-3" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="glass-card">
+                                <DropdownMenuContent align="end" className="glass-card w-48">
                                   <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem 
@@ -509,21 +541,15 @@ const UserManagement = () => {
                                     className="cursor-pointer"
                                   >
                                     <Edit className="w-4 h-4 mr-2" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem 
-                                    onClick={() => handleToggleActive(user)}
-                                    className="cursor-pointer"
-                                  >
-                                    {user.isActive ? 'Nonaktifkan' : 'Aktifkan'}
+                                    Edit Data
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem 
-                                    className="text-destructive cursor-pointer"
+                                    className="text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10"
                                     onClick={() => openDeleteDialog(user)}
                                   >
                                     <Trash2 className="w-4 h-4 mr-2" />
-                                    Hapus
+                                    Hapus Permanen
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -583,7 +609,38 @@ const UserManagement = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto px-1">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-xs font-medium text-muted-foreground">
+                Email <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder={editingUser ? (editingUser.email || '') : "nama@gmail.com"}
+                value={formData.email}
+                disabled={!!editingUser} 
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                className="h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200"
+              />
+            </div>
+
+            {!editingUser && (
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-xs font-medium text-muted-foreground">
+                  Password <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Minimal 6 karakter"
+                  value={formData.password || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                  className="h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200"
+                />
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="name" className="text-xs font-medium text-muted-foreground">
                 Nama <span className="text-destructive">*</span>

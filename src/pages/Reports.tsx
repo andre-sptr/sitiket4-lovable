@@ -64,8 +64,8 @@ import {
 import { motion } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import SEO from '@/components/SEO';
 
-// Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -104,7 +104,6 @@ const chartCardVariants = {
   }
 };
 
-// Stat Card Component
 interface StatCardProps {
   title: string;
   value: string | number;
@@ -176,7 +175,6 @@ const StatCard = ({ title, value, icon: Icon, trend, variant = 'default', subtit
   );
 };
 
-// Chart Card Wrapper
 const ChartCard = ({ children, title, description, icon: Icon, className }: { children: React.ReactNode; title: string; description?: string; icon?: React.ElementType; className?: string }) => (
   <motion.div variants={chartCardVariants}>
     <Card className={cn("overflow-hidden transition-all duration-300 hover:shadow-lg", className)}>
@@ -215,7 +213,6 @@ const Reports = () => {
     });
   }, [dateRange, tickets]);
 
-  // Period data for bar/area charts
   const periodData = useMemo(() => {
     const days = [];
     const diffTime = Math.abs(dateRange.to.getTime() - dateRange.from.getTime());
@@ -252,7 +249,6 @@ const Reports = () => {
     return days;
   }, [dateRange, filteredTickets]);
 
-  // Category data for pie chart
   const categoryData = useMemo(() => {
     const categories: Record<string, number> = {};
     filteredTickets.forEach(t => {
@@ -266,7 +262,6 @@ const Reports = () => {
     }));
   }, [filteredTickets]);
 
-  // Status data for pie chart
   const statusData = useMemo(() => {
     return [
       { name: 'Open', value: filteredTickets.filter(t => t.status === 'OPEN').length, status: 'open', fill: 'hsl(var(--primary))' },
@@ -277,7 +272,6 @@ const Reports = () => {
     ].filter(d => d.value > 0);
   }, [filteredTickets]);
 
-  // Provider data for chart
   const providerData = useMemo(() => {
     const providers: Record<string, { total: number; closed: number; comply: number }> = {};
     filteredTickets.forEach(t => {
@@ -298,7 +292,6 @@ const Reports = () => {
     })).sort((a, b) => b.total - a.total);
   }, [filteredTickets]);
 
-  // TTR Compliance radial data
   const complianceRadialData = useMemo(() => {
     const comply = filteredTickets.filter(t => t.ttr_compliance === 'COMPLY').length;
     const notComply = filteredTickets.filter(t => t.ttr_compliance === 'NOT COMPLY').length;
@@ -308,7 +301,6 @@ const Reports = () => {
     ];
   }, [filteredTickets]);
 
-  // Hourly distribution data
   const hourlyData = useMemo(() => {
     const hours: Record<number, number> = {};
     for (let i = 0; i < 24; i++) hours[i] = 0;
@@ -324,7 +316,6 @@ const Reports = () => {
     }));
   }, [filteredTickets]);
 
-  // Average resolution time
   const avgResolutionTime = useMemo(() => {
     const closedTickets = filteredTickets.filter(t => t.status === 'CLOSED' && t.ttr_real_hours);
     if (closedTickets.length === 0) return 0;
@@ -332,7 +323,6 @@ const Reports = () => {
     return Math.round((total / closedTickets.length) * 10) / 10;
   }, [filteredTickets]);
 
-  // Chart configs
   const barChartConfig: ChartConfig = {
     open: { label: 'Open', color: 'hsl(var(--primary))' },
     onprogress: { label: 'On Progress', color: 'hsl(45 93% 47%)' },
@@ -482,6 +472,7 @@ const Reports = () => {
 
   return (
     <Layout>
+      <SEO title="Laporan & Analitik" description="Statistik dan performa penanganan tiket." />
       <motion.div 
         className="space-y-6"
         variants={containerVariants}
@@ -629,7 +620,7 @@ const Reports = () => {
                 animate={{ opacity: 1 }}
                 key={filteredTickets.length}
               >
-                <span className="text-xs text-muted-foreground bg-primary/10 text-primary px-3 py-1.5 rounded-full font-medium">
+                <span className="text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full font-medium">
                   {filteredTickets.length} tiket ditemukan
                 </span>
               </motion.div>
@@ -746,8 +737,8 @@ const Reports = () => {
               <div className="grid lg:grid-cols-2 gap-6">
                 {/* Provider Performance */}
                 <ChartCard 
-                  title="Performa per Provider" 
-                  description="Distribusi dan compliance rate per provider"
+                  title="Performa per Pelanggan" 
+                  description="Distribusi dan compliance rate per pelanggan"
                   icon={Users}
                 >
                   <div className="space-y-4">
@@ -1115,7 +1106,7 @@ const Reports = () => {
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <Users className="w-5 h-5 text-primary" />
-                  <span className="text-sm text-muted-foreground">Provider Aktif</span>
+                  <span className="text-sm text-muted-foreground">Pelanggan Aktif</span>
                 </div>
                 <p className="text-3xl font-bold">{providerData.length}</p>
               </div>

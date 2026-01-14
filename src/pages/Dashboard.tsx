@@ -25,6 +25,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import SEO from '@/components/SEO';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -67,6 +68,7 @@ const Dashboard = () => {
 
   return (
     <Layout>
+      <SEO title="Dashboard" />
       <div className="space-y-6 lg:space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>

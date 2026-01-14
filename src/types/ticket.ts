@@ -4,6 +4,7 @@ export type TicketStatus =
   | 'OPEN' 
   | 'ASSIGNED'
   | 'ONPROGRESS' 
+  | 'PENDING'
   | 'TEMPORARY' 
   | 'WAITING_MATERIAL' 
   | 'WAITING_ACCESS' 
@@ -15,6 +16,7 @@ export type TTRCompliance = 'COMPLY' | 'NOT COMPLY';
 export interface User {
   id: string;
   name: string;
+  email?: string;
   role: UserRole;
   phone?: string;
   area?: string;

@@ -32,18 +32,23 @@ export const hsaToStoMap: Record<string, string[]> = {
 export const defaultDropdownOptions: DropdownOptions = {
   hsa: ['ARENGKA', 'BUKIT RAYA', 'DUMAI', 'PANGKALAN KERINCI', 'PEKANBARU', 'RENGAT'],
   sto: ['ARK', 'BKR', 'BKN', 'UBT', 'PPN', 'SAK', 'SEA', 'SGP', 'DUM', 'BAG', 'BAS', 'SLJ', 'DRI', 'BGU', 'PKR', 'RBI', 'PWG', 'SOK', 'MIS', 'PBR', 'RGT', 'TBH', 'AMK', 'TAK', 'PMB', 'KLE'],
-  odc: ['MIS', 'SLJ', 'TBH', 'DUM', 'PKU', 'BKN'],
+  odc: [],
   stakeHolder: ['TLKM', 'MTEL', 'LA', 'SPBU', 'UMT', 'ALFAMART', 'INDOMARET', 'KIMIA FARMA'],
-  jenisPelanggan: ['TSEL', 'OTHER'],
-  kategori: ['LOW[24]', 'MINOR[16]', 'MAJOR[8]', 'CRITICAL[4]', 'PREMIUM[2]', 'OLO[4]', 'OLO GAMAS[7]', 'OLO QUALITY[7]', 'CNQ'],
+  jenisPelanggan: ['DATIN', 'FTM', 'GAMAS', 'HSI', 'INDIBIZ', 'LA', 'MTEL', 'NE', 'ODC', 'OLO', 'POTS', 'SDWAN', 'SIPTRUNK', 'SPBU', 'TSEL', 'UMT', 'WICO', 'WMS LITE', 'WMS REGULER'],
+  
+  kategori: ['LOW[24]', 'MINOR[16]', 'MAJOR[8]', 'CRITICAL[4]', 'PREMIUM[2]', 'OLO[4]', 'OLO GAMAS[7]', 'OLO QUALITY[7]', 'CNQ', 'HSI RESELLER[6]', 'HSI RESELLER[36]', 'POTS[6]', 
+    'INDIBIZ[4]', 'INDIBIZ[24]', 'SIPTRUNK[14]', 'DATIN K2[3.6]', 'DATIN K3[7.2]', 'WICO[12]', 'WMS LITE[3]', 'WMS REGULER[3]', 'LA[5]', 'MTEL[4]', 'NE DOWN[3]', 'SPBU[2]', 'MONET', 
+    'SQM', 'MANUAL', 'AP DOWN', 'MOJANG GAUL', 'VALINS', 'GCU', 'COMO', 'REVITALISASI', 'VALIDASI', 'FEEDER[10]', 'DISTRIBUSI[4]', 'ODC[18]', 'ODP[3]', 'UMT[4]', 'PATROLI', 
+    'PREVENTIVE', 'INVENTORY', 'MS SDWAN', 'PSB SDWAN'],
+
   losNonLos: ['LOS', 'NON LOS', 'UNSPEC'],
   classSite: ['Platinum'],
   tim: ['SQUAT-A', 'SQUAT-B'],
   
-  statusTiket: ['OPEN', 'CLOSED', 'GAMAS', 'PENDING', 'ASSIGNED', 'ONPROGRESS', 'TEMPORARY', 'WAITING_MATERIAL', 'WAITING_ACCESS', 'WAITING_COORDINATION' ],
+  statusTiket: ['OPEN', 'ASSIGNED', 'ONPROGRESS', 'PENDING', 'TEMPORARY', 'WAITING_MATERIAL', 'WAITING_ACCESS', 'WAITING_COORDINATION', 'CLOSED', 'GAMAS'],
   compliance: ['COMPLY', 'NOT COMPLY'],
-  permanenTemporer: ['PERMANEN', 'TEMPORER'],
-  statusAlatBerat: ['TIDAK PERLU', 'DIMINTA', 'DALAM PROSES', 'SELESAI'],
+  permanenTemporer: ['PERMANEN', 'TEMPORER LAMA', 'TEMPORER BARU'],
+  statusAlatBerat: ['DI LOKASI DAN BEROPERASI', 'STOP TETAPI DI LOKASI', 'TIDAK ADA ALBER DI LOKASI'],
   penyebabGangguan: [
     'Kabel Putus',
     'ODP Rusak',
@@ -61,15 +66,7 @@ export const defaultDropdownOptions: DropdownOptions = {
     'Reset Perangkat',
     'Lainnya'
   ],
-  kendala: [
-    'Tidak Ada Kendala',
-    'Akses Lokasi Sulit',
-    'Menunggu Material',
-    'Menunggu Koordinasi',
-    'Cuaca Buruk',
-    'Alat Berat Belum Tersedia',
-    'Lainnya'
-  ],
+  kendala: [],
 };
 
 const STORAGE_KEY = 'tiketops_dropdown_options';
@@ -126,12 +123,12 @@ export const useDropdownOptions = () => {
 };
 
 export const dropdownLabels: Record<keyof DropdownOptions, string> = {
-  hsa: 'HSA (Holding Sub Area)',
+  hsa: 'HSA (Head of Service Area)',
   sto: 'STO (Sentral Telepon Otomat)',
   odc: 'ODC',
   stakeHolder: 'Stake Holder',
   jenisPelanggan: 'Jenis Pelanggan',
-  kategori: 'Kategori Tiket',
+  kategori: 'Saverity',
   losNonLos: 'LOS / Non LOS',
   classSite: 'Class Site',
   tim: 'Tim',

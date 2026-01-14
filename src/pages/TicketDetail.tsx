@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { Layout } from '@/components/Layout';
-import { StatusBadge, ComplianceBadge, TTRBadge } from '@/components/StatusBadge';
+import { StatusBadge, ComplianceBadge } from '@/components/StatusBadge';
 import { Timeline } from '@/components/Timeline';
 import { TicketDetailSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { useTicket, useDeleteTicket, useAddProgressUpdate } from '@/hooks/useTickets';
 import { mapDbTicketToTicket } from '@/lib/ticketMappers';
-import { formatDateWIB, generateWhatsAppMessage, generateGoogleMapsLink, getStatusLabel } from '@/lib/formatters';
+import { formatDateWIB, generateWhatsAppMessage, generateGoogleMapsLink } from '@/lib/formatters';
 import { TicketStatus } from '@/types/ticket';
 import { 
   ArrowLeft, 
@@ -26,12 +26,10 @@ import {
   Clock, 
   User, 
   Copy, 
-  ExternalLink,
   FileText,
   Send,
   Phone,
   Trash2,
-  Calendar,
   Target,
   Navigation,
   AlertTriangle,
@@ -54,6 +52,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import SEO from '@/components/SEO';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -298,7 +297,7 @@ const TicketDetail = () => {
     }
 
     if (!ticket || !user) return;
-
+ 
     try {
       await addProgressUpdate.mutateAsync({
         ticket_id: ticket.id,
@@ -328,6 +327,12 @@ const TicketDetail = () => {
 
   return (
     <Layout>
+      {ticket && (
+        <SEO 
+          title={`${ticket.siteCode} - ${ticket.siteName}`}
+          description={`Detail tiket gangguan di ${ticket.siteName}. Status: ${ticket.status}`} 
+        />
+      )}
       <motion.div 
         className="space-y-6"
         variants={containerVariants}
@@ -604,10 +609,10 @@ const TicketDetail = () => {
                         <SelectItem value="ONPROGRESS">On Progress</SelectItem>
                         <SelectItem value="PENDING">Pending</SelectItem>
                         <SelectItem value="TEMPORARY">Temporary</SelectItem>
-                        <SelectItem value="CLOSED">Closed</SelectItem>
                         <SelectItem value="WAITING_MATERIAL">Menunggu Material</SelectItem>
                         <SelectItem value="WAITING_ACCESS">Menunggu Akses</SelectItem>
                         <SelectItem value="WAITING_COORDINATION">Menunggu Koordinasi</SelectItem>
+                        <SelectItem value="CLOSED">Closed</SelectItem>
                       </SelectContent>
                     </Select>
                     

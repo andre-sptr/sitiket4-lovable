@@ -8,7 +8,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Settings as SettingsIcon, Clock, MessageSquare, Save, RotateCcw, AlertTriangle, Timer, Copy, List, Plus, X, GripVertical } from 'lucide-react';
+import { 
+  Settings as SettingsIcon, 
+  Clock, 
+  MessageSquare, 
+  Save, 
+  RotateCcw, 
+  AlertTriangle, 
+  Timer, 
+  Copy, 
+  List, 
+  Plus, 
+  X, 
+  GripVertical,
+  ChevronRight,
+  Sparkles,
+  Zap
+} from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +50,9 @@ import {
   optionGroups,
   DropdownOptions 
 } from '@/hooks/useDropdownOptions';
+import SEO from '@/components/SEO';
+import { Separator } from '@/components/ui/separator';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const defaultSettings = {
   ttrThresholds: {
@@ -120,6 +139,41 @@ export const saveSettings = (settings: AppSettings): void => {
   localStorage.setItem('tiketops_settings', JSON.stringify(settings));
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4 },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.98 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.4 },
+  },
+  hover: {
+    y: -2,
+    boxShadow: "0 10px 40px -10px hsl(var(--primary) / 0.15)",
+    transition: { duration: 0.2 },
+  },
+};
+
 const DropdownOptionEditor = ({
   optionKey,
   label,
@@ -153,54 +207,78 @@ const DropdownOptionEditor = ({
   };
 
   return (
-    <AccordionItem value={optionKey}>
-      <AccordionTrigger className="hover:no-underline">
+    <AccordionItem value={optionKey} className="border-b border-border/50">
+      <AccordionTrigger className="hover:no-underline py-4 px-2 hover:bg-muted/30 rounded-lg transition-colors">
         <div className="flex items-center gap-3">
-          <span className="font-medium">{label}</span>
-          <Badge variant="secondary" className="text-xs">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <List className="w-4 h-4 text-primary" />
+          </div>
+          <span className="font-medium text-foreground">{label}</span>
+          <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-0">
             {values.length} item
           </Badge>
         </div>
       </AccordionTrigger>
       <AccordionContent>
-        <div className="space-y-3 pt-2">
+        <div className="space-y-4 pt-3 px-2">
           <div className="flex gap-2">
-            <Input
-              placeholder="Tambah opsi baru..."
-              value={newItem}
-              onChange={(e) => setNewItem(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="flex-1"
-            />
-            <Button onClick={handleAdd} size="sm" disabled={!newItem.trim()}>
-              <Plus className="w-4 h-4" />
-            </Button>
+            <div className="relative flex-1">
+              <Input
+                placeholder="Tambah opsi baru..."
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="pr-10 bg-muted/30 border-border/50 focus:border-primary/50 focus:ring-primary/20 transition-all"
+              />
+            </div>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button 
+                onClick={handleAdd} 
+                size="sm" 
+                disabled={!newItem.trim()}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </motion.div>
           </div>
 
-          <div className="space-y-1 max-h-[300px] overflow-y-auto">
-            {values.map((value, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-2 p-2 bg-muted/50 rounded-md group hover:bg-muted"
-              >
-                <GripVertical className="w-4 h-4 text-muted-foreground opacity-50" />
-                <span className="flex-1 text-sm">{value}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => handleRemove(index)}
+          <AnimatePresence mode="popLayout">
+            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+              {values.map((value, index) => (
+                <motion.div
+                  key={`${optionKey}-${index}`}
+                  layout
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20, scale: 0.9 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg group hover:bg-muted/50 border border-border/30 transition-all"
                 >
-                  <X className="w-4 h-4 text-destructive" />
-                </Button>
-              </div>
-            ))}
-          </div>
+                  <GripVertical className="w-4 h-4 text-muted-foreground/50 cursor-grab" />
+                  <span className="flex-1 text-sm text-foreground">{value}</span>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleRemove(index)}
+                    className="p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-all"
+                  >
+                    <X className="w-4 h-4 text-destructive" />
+                  </motion.button>
+                </motion.div>
+              ))}
+            </div>
+          </AnimatePresence>
 
           {values.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Belum ada opsi. Tambahkan opsi pertama di atas.
-            </p>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-8 text-muted-foreground"
+            >
+              <List className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">Belum ada opsi. Tambahkan opsi pertama di atas.</p>
+            </motion.div>
           )}
         </div>
       </AccordionContent>
@@ -326,131 +404,196 @@ const Settings = () => {
 
   return (
     <Layout>
-      <div className="space-y-6 max-w-4xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <SettingsIcon className="w-6 h-6" />
-              Pengaturan
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Konfigurasi sistem, dropdown options, dan template
-            </p>
-          </div>
-        </div>
-
-        <Tabs defaultValue="dropdown" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="dropdown" className="gap-2">
-              <List className="w-4 h-4" />
-              <span className="hidden sm:inline">Opsi Dropdown</span>
-              <span className="sm:hidden">Dropdown</span>
-            </TabsTrigger>
-            <TabsTrigger value="ttr" className="gap-2">
-              <Clock className="w-4 h-4" />
-              <span className="hidden sm:inline">Threshold TTR</span>
-              <span className="sm:hidden">TTR</span>
-            </TabsTrigger>
-            <TabsTrigger value="whatsapp" className="gap-2">
-              <MessageSquare className="w-4 h-4" />
-              <span className="hidden sm:inline">Template WA</span>
-              <span className="sm:hidden">WA</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="dropdown" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold">Kelola Opsi Dropdown</h2>
-                <p className="text-sm text-muted-foreground">
-                  Tambah, hapus, atau ubah opsi dropdown yang digunakan di form Import dan Update Tiket
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      Reset
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Reset Opsi Dropdown?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Semua opsi dropdown akan dikembalikan ke nilai default. Perubahan yang disimpan akan hilang.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Batal</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleResetDropdownOptions}>Ya, Reset</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                <Button onClick={handleSaveDropdownOptions} disabled={!hasDropdownChanges} size="sm">
-                  <Save className="w-4 h-4 mr-2" />
-                  Simpan
-                </Button>
-              </div>
+      <SEO title="Pengaturan" />
+      
+      {/* Background Effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-20 right-20 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-20 w-[400px] h-[400px] bg-accent/5 rounded-full blur-3xl" />
+      </div>
+      
+      <motion.div 
+        className="space-y-6 max-w-4xl mx-auto"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Header */}
+        <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <motion.div 
+              className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20"
+              whileHover={{ scale: 1.05, rotate: 5 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
+              <SettingsIcon className="w-6 h-6 text-primary" />
+            </motion.div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Pengaturan</h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                Konfigurasi sistem, dropdown options, dan template
+              </p>
             </div>
+          </div>
+        </motion.div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Form Import Tiket</CardTitle>
-                <CardDescription>
-                  Opsi dropdown yang digunakan saat membuat tiket baru
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Accordion type="multiple" className="w-full">
-                  {optionGroups['Import Tiket'].map((key) => (
-                    <DropdownOptionEditor
-                      key={key}
-                      optionKey={key}
-                      label={dropdownLabels[key]}
-                      values={dropdownOptions[key]}
-                      onChange={(values) => handleDropdownOptionChange(key, values)}
-                    />
-                  ))}
-                </Accordion>
-              </CardContent>
-            </Card>
+        <motion.div variants={itemVariants}>
+          <Tabs defaultValue="dropdown" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 rounded-xl border border-border/50">
+              <TabsTrigger 
+                value="dropdown" 
+                className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all"
+              >
+                <List className="w-4 h-4" />
+                <span className="hidden sm:inline">Opsi Dropdown</span>
+                <span className="sm:hidden">Dropdown</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="ttr" 
+                className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all"
+              >
+                <Clock className="w-4 h-4" />
+                <span className="hidden sm:inline">Threshold TTR</span>
+                <span className="sm:hidden">TTR</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="whatsapp" 
+                className="gap-2 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span className="hidden sm:inline">Template WA</span>
+                <span className="sm:hidden">WA</span>
+              </TabsTrigger>
+            </TabsList>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Form Update Tiket</CardTitle>
-                <CardDescription>
-                  Opsi dropdown yang digunakan saat mengupdate tiket
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Accordion type="multiple" className="w-full">
-                  {optionGroups['Update Tiket'].map((key) => (
-                    <DropdownOptionEditor
-                      key={key}
-                      optionKey={key}
-                      label={dropdownLabels[key]}
-                      values={dropdownOptions[key]}
-                      onChange={(values) => handleDropdownOptionChange(key, values)}
-                    />
-                  ))}
-                </Accordion>
-              </CardContent>
-            </Card>
-          </TabsContent>
+            {/* Dropdown Options Tab */}
+            <TabsContent value="dropdown" className="space-y-6">
+              <motion.div 
+                variants={itemVariants}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              >
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Kelola Opsi Dropdown</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Tambah, hapus, atau ubah opsi dropdown yang digunakan di form
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Button variant="outline" size="sm" className="border-border/50 hover:bg-muted/50">
+                          <RotateCcw className="w-4 h-4 mr-2" />
+                          Reset
+                        </Button>
+                      </motion.div>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="bg-background/95 backdrop-blur-xl border-border/50">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Reset Opsi Dropdown?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Semua opsi dropdown akan dikembalikan ke nilai default. Perubahan yang disimpan akan hilang.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleResetDropdownOptions}>Ya, Reset</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button 
+                      onClick={handleSaveDropdownOptions} 
+                      disabled={!hasDropdownChanges} 
+                      size="sm"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Simpan
+                    </Button>
+                  </motion.div>
+                </div>
+              </motion.div>
 
-          <TabsContent value="ttr" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div />
-              <div className="flex gap-2">
+              <motion.div variants={cardVariants} whileHover="hover">
+                <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg shadow-primary/5 overflow-hidden">
+                  <CardHeader className="border-b border-border/50 bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <Zap className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-base text-foreground">Form Import Tiket</CardTitle>
+                        <CardDescription>
+                          Opsi dropdown yang digunakan saat membuat tiket baru
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <Accordion type="multiple" className="w-full">
+                      {optionGroups['Import Tiket'].map((key) => (
+                        <DropdownOptionEditor
+                          key={key}
+                          optionKey={key}
+                          label={dropdownLabels[key]}
+                          values={dropdownOptions[key]}
+                          onChange={(values) => handleDropdownOptionChange(key, values)}
+                        />
+                      ))}
+                    </Accordion>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div variants={cardVariants} whileHover="hover">
+                <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg shadow-primary/5 overflow-hidden">
+                  <CardHeader className="border-b border-border/50 bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-accent/20">
+                        <Sparkles className="w-5 h-5 text-accent-foreground" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-base text-foreground">Form Update Tiket</CardTitle>
+                        <CardDescription>
+                          Opsi dropdown yang digunakan saat mengupdate tiket
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <Accordion type="multiple" className="w-full">
+                      {optionGroups['Update Tiket'].map((key) => (
+                        <DropdownOptionEditor
+                          key={key}
+                          optionKey={key}
+                          label={dropdownLabels[key]}
+                          values={dropdownOptions[key]}
+                          onChange={(values) => handleDropdownOptionChange(key, values)}
+                        />
+                      ))}
+                    </Accordion>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
+
+            {/* TTR Tab */}
+            <TabsContent value="ttr" className="space-y-6">
+              <motion.div 
+                variants={itemVariants}
+                className="flex items-center justify-end gap-2"
+              >
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      Reset
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button variant="outline" size="sm" className="border-border/50 hover:bg-muted/50">
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        Reset
+                      </Button>
+                    </motion.div>
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
+                  <AlertDialogContent className="bg-background/95 backdrop-blur-xl border-border/50">
                     <AlertDialogHeader>
                       <AlertDialogTitle>Reset Pengaturan TTR?</AlertDialogTitle>
                       <AlertDialogDescription>
@@ -463,264 +606,380 @@ const Settings = () => {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-                <Button onClick={handleSave} disabled={!hasChanges} size="sm">
-                  <Save className="w-4 h-4 mr-2" />
-                  Simpan
-                </Button>
-              </div>
-            </div>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button 
+                    onClick={handleSave} 
+                    disabled={!hasChanges} 
+                    size="sm"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Simpan
+                  </Button>
+                </motion.div>
+              </motion.div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  Standar SLA per Kategori
-                </CardTitle>
-                <CardDescription>
-                  Tentukan durasi target untuk setiap kategori tiket
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {Object.entries(settings.categoryTtr || defaultSettings.categoryTtr).map(([key, val]) => (
-                    <div key={key} className="grid gap-2">
-                      <Label htmlFor={`cat-${key}`} className="capitalize">
-                        {key} (jam)
+              <motion.div variants={cardVariants} whileHover="hover">
+                <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg shadow-primary/5 overflow-hidden">
+                  <CardHeader className="border-b border-border/50 bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <Clock className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-foreground">Standar SLA per Kategori</CardTitle>
+                        <CardDescription>
+                          Tentukan durasi target untuk setiap kategori tiket
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                      {Object.entries(settings.categoryTtr || defaultSettings.categoryTtr).map(([key, val]) => (
+                        <motion.div 
+                          key={key} 
+                          className="space-y-2"
+                          whileHover={{ scale: 1.02 }}
+                        >
+                          <Label htmlFor={`cat-${key}`} className="capitalize text-foreground font-medium">
+                            {key}
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              id={`cat-${key}`}
+                              type="number"
+                              min={1}
+                              value={val}
+                              onChange={(e) => handleCategoryTtrChange(key as keyof AppSettings['categoryTtr'], parseFloat(e.target.value) || 0)}
+                              className="bg-muted/30 border-border/50 focus:border-primary/50 focus:ring-primary/20 pr-12"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">jam</span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div variants={cardVariants} whileHover="hover">
+                <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg shadow-primary/5 overflow-hidden">
+                  <CardHeader className="border-b border-border/50 bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-accent/20">
+                        <Timer className="w-5 h-5 text-accent-foreground" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-foreground">Konfigurasi TTR & Reminder</CardTitle>
+                        <CardDescription>
+                          Atur kapan sistem menampilkan warning dan alert untuk tiket
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-6 pt-6">
+                    {/* Warning Hours */}
+                    <motion.div className="space-y-2" whileHover={{ x: 4 }} transition={{ duration: 0.2 }}>
+                      <Label htmlFor="warningHours" className="flex items-center gap-2 text-foreground">
+                        <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                        Threshold Warning (jam)
                       </Label>
-                      <Input
-                        id={`cat-${key}`}
-                        type="number"
-                        min={1}
-                        value={val}
-                        onChange={(e) => handleCategoryTtrChange(key as keyof AppSettings['categoryTtr'], parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Timer className="w-5 h-5" />
-                  Konfigurasi TTR & Reminder
-                </CardTitle>
-                <CardDescription>
-                  Atur kapan sistem menampilkan warning dan alert untuk tiket
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="warningHours" className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                    Threshold Warning (jam)
-                  </Label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      id="warningHours"
-                      type="number"
-                      min={0}
-                      max={24}
-                      step={0.5}
-                      value={settings.ttrThresholds.warningHours}
-                      onChange={(e) => handleThresholdChange('warningHours', parseFloat(e.target.value) || 0)}
-                      className="w-24"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      Tiket dengan sisa TTR ≤ {settings.ttrThresholds.warningHours} jam ditampilkan kuning
-                    </span>
-                  </div>
-                </div>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          id="warningHours"
+                          type="number"
+                          min={0}
+                          max={24}
+                          step={0.5}
+                          value={settings.ttrThresholds.warningHours}
+                          onChange={(e) => handleThresholdChange('warningHours', parseFloat(e.target.value) || 0)}
+                          className="w-24 bg-muted/30 border-border/50 focus:border-primary/50"
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          Tiket dengan sisa TTR ≤ {settings.ttrThresholds.warningHours} jam ditampilkan kuning
+                        </span>
+                      </div>
+                    </motion.div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="criticalHours" className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500" />
-                    Threshold Critical (jam)
-                  </Label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      id="criticalHours"
-                      type="number"
-                      min={0}
-                      max={24}
-                      step={0.5}
-                      value={settings.ttrThresholds.criticalHours}
-                      onChange={(e) => handleThresholdChange('criticalHours', parseFloat(e.target.value) || 0)}
-                      className="w-24"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      Tiket dengan sisa TTR ≤ {settings.ttrThresholds.criticalHours} jam ditampilkan merah
-                    </span>
-                  </div>
-                </div>
+                    {/* Critical Hours */}
+                    <motion.div className="space-y-2" whileHover={{ x: 4 }} transition={{ duration: 0.2 }}>
+                      <Label htmlFor="criticalHours" className="flex items-center gap-2 text-foreground">
+                        <div className="w-3 h-3 rounded-full bg-red-500" />
+                        Threshold Critical (jam)
+                      </Label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          id="criticalHours"
+                          type="number"
+                          min={0}
+                          max={24}
+                          step={0.5}
+                          value={settings.ttrThresholds.criticalHours}
+                          onChange={(e) => handleThresholdChange('criticalHours', parseFloat(e.target.value) || 0)}
+                          className="w-24 bg-muted/30 border-border/50 focus:border-primary/50"
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          Tiket dengan sisa TTR ≤ {settings.ttrThresholds.criticalHours} jam ditampilkan merah
+                        </span>
+                      </div>
+                    </motion.div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="dueSoonHours" className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-yellow-500" />
-                    Alert "Due Soon" (jam)
-                  </Label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      id="dueSoonHours"
-                      type="number"
-                      min={0}
-                      max={24}
-                      step={0.5}
-                      value={settings.ttrThresholds.dueSoonHours}
-                      onChange={(e) => handleThresholdChange('dueSoonHours', parseFloat(e.target.value) || 0)}
-                      className="w-24"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      Dashboard menampilkan badge "Due Soon" jika sisa TTR ≤ {settings.ttrThresholds.dueSoonHours} jam
-                    </span>
-                  </div>
-                </div>
+                    {/* Due Soon Hours */}
+                    <motion.div className="space-y-2" whileHover={{ x: 4 }} transition={{ duration: 0.2 }}>
+                      <Label htmlFor="dueSoonHours" className="flex items-center gap-2 text-foreground">
+                        <AlertTriangle className="w-4 h-4 text-yellow-500" />
+                        Alert "Due Soon" (jam)
+                      </Label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          id="dueSoonHours"
+                          type="number"
+                          min={0}
+                          max={24}
+                          step={0.5}
+                          value={settings.ttrThresholds.dueSoonHours}
+                          onChange={(e) => handleThresholdChange('dueSoonHours', parseFloat(e.target.value) || 0)}
+                          className="w-24 bg-muted/30 border-border/50 focus:border-primary/50"
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          Dashboard menampilkan badge "Due Soon" jika sisa TTR ≤ {settings.ttrThresholds.dueSoonHours} jam
+                        </span>
+                      </div>
+                    </motion.div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="noUpdateAlertMinutes" className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-orange-500" />
-                    Alert Tidak Ada Update (menit)
-                  </Label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      id="noUpdateAlertMinutes"
-                      type="number"
-                      min={15}
-                      max={480}
-                      step={15}
-                      value={settings.ttrThresholds.noUpdateAlertMinutes}
-                      onChange={(e) => handleThresholdChange('noUpdateAlertMinutes', parseInt(e.target.value) || 60)}
-                      className="w-24"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      Alert jika tiket belum diupdate TA setelah {settings.ttrThresholds.noUpdateAlertMinutes} menit
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                    {/* No Update Alert */}
+                    <motion.div className="space-y-2" whileHover={{ x: 4 }} transition={{ duration: 0.2 }}>
+                      <Label htmlFor="noUpdateAlertMinutes" className="flex items-center gap-2 text-foreground">
+                        <Clock className="w-4 h-4 text-orange-500" />
+                        Alert Tidak Ada Update (menit)
+                      </Label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          id="noUpdateAlertMinutes"
+                          type="number"
+                          min={15}
+                          max={480}
+                          step={15}
+                          value={settings.ttrThresholds.noUpdateAlertMinutes}
+                          onChange={(e) => handleThresholdChange('noUpdateAlertMinutes', parseInt(e.target.value) || 60)}
+                          className="w-24 bg-muted/30 border-border/50 focus:border-primary/50"
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          Alert jika tiket belum diupdate TA setelah {settings.ttrThresholds.noUpdateAlertMinutes} menit
+                        </span>
+                      </div>
+                    </motion.div>
+                  </CardContent>
+                </Card>
+              </motion.div>
 
-            <Card className="border-dashed">
-              <CardHeader>
-                <CardTitle className="text-base">Preview Indikator</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-3">
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-sm">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                    Safe (&gt; {settings.ttrThresholds.warningHours}j)
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-100 text-yellow-700 text-sm">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                    Warning (≤ {settings.ttrThresholds.warningHours}j)
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-100 text-red-700 text-sm">
-                    <div className="w-2 h-2 rounded-full bg-red-500" />
-                    Critical (≤ {settings.ttrThresholds.criticalHours}j)
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-200 text-red-800 text-sm">
-                    <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
-                    Overdue (&lt; 0)
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="whatsapp" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div />
-              <Button onClick={handleSave} disabled={!hasChanges} size="sm">
-                <Save className="w-4 h-4 mr-2" />
-                Simpan
-              </Button>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Variabel Template</CardTitle>
-                <CardDescription>
-                  Gunakan variabel berikut dalam template, sistem akan mengganti otomatis
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                  {templateVariables.map((v) => (
-                    <div key={v.var} className="flex items-start gap-2">
-                      <code className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">{v.var}</code>
-                      <span className="text-muted-foreground">{v.desc}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <MessageSquare className="w-5 h-5" />
-                      Template Share Tiket
+              {/* Preview Card */}
+              <motion.div variants={cardVariants} whileHover="hover">
+                <Card className="bg-card/50 backdrop-blur-sm border-dashed border-border/50 overflow-hidden">
+                  <CardHeader className="border-b border-border/30 bg-muted/20">
+                    <CardTitle className="text-base text-foreground flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      Preview Indikator
                     </CardTitle>
-                    <CardDescription>
-                      Template pesan WA untuk share tiket ke grup
-                    </CardDescription>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleCopyTemplate(settings.whatsappTemplates.shareTemplate)}
-                  >
-                    <Copy className="w-4 h-4 mr-1" />
-                    Copy
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={settings.whatsappTemplates.shareTemplate}
-                  onChange={(e) => handleTemplateChange('shareTemplate', e.target.value)}
-                  className="min-h-[300px] font-mono text-sm"
-                  placeholder="Masukkan template share tiket..."
-                />
-              </CardContent>
-            </Card>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="flex flex-wrap gap-3">
+                      <motion.div 
+                        whileHover={{ scale: 1.05 }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-medium border border-emerald-500/20"
+                      >
+                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                        Safe (&gt; {settings.ttrThresholds.warningHours}j)
+                      </motion.div>
+                      <motion.div 
+                        whileHover={{ scale: 1.05 }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-sm font-medium border border-yellow-500/20"
+                      >
+                        <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                        Warning (≤ {settings.ttrThresholds.warningHours}j)
+                      </motion.div>
+                      <motion.div 
+                        whileHover={{ scale: 1.05 }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 text-sm font-medium border border-red-500/20"
+                      >
+                        <div className="w-2 h-2 rounded-full bg-red-500" />
+                        Critical (≤ {settings.ttrThresholds.criticalHours}j)
+                      </motion.div>
+                      <motion.div 
+                        whileHover={{ scale: 1.05 }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-600/10 text-red-700 dark:text-red-300 text-sm font-medium border border-red-600/20"
+                      >
+                        <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+                        Overdue (&lt; 0)
+                      </motion.div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
 
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <MessageSquare className="w-5 h-5" />
-                      Template Update Progress
-                    </CardTitle>
-                    <CardDescription>
-                      Template untuk TA update progress
-                    </CardDescription>
-                  </div>
+            {/* WhatsApp Tab */}
+            <TabsContent value="whatsapp" className="space-y-6">
+              <motion.div 
+                variants={itemVariants}
+                className="flex items-center justify-end gap-2"
+              >
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button variant="outline" size="sm" className="border-border/50 hover:bg-muted/50">
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        Reset
+                      </Button>
+                    </motion.div>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="bg-background/95 backdrop-blur-xl border-border/50">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Reset Template WA?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Konfigurasi template akan dikembalikan ke default.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Batal</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleReset}>Ya, Reset</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button 
-                    variant="outline" 
+                    onClick={handleSave} 
+                    disabled={!hasChanges} 
                     size="sm"
-                    onClick={() => handleCopyTemplate(settings.whatsappTemplates.updateTemplate)}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
                   >
-                    <Copy className="w-4 h-4 mr-1" />
-                    Copy
+                    <Save className="w-4 h-4 mr-2" />
+                    Simpan
                   </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={settings.whatsappTemplates.updateTemplate}
-                  onChange={(e) => handleTemplateChange('updateTemplate', e.target.value)}
-                  className="min-h-[250px] font-mono text-sm"
-                  placeholder="Masukkan template update progress..."
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+                </motion.div>
+              </motion.div>
+
+              {/* Variables Card */}
+              <motion.div variants={cardVariants} whileHover="hover">
+                <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg shadow-primary/5 overflow-hidden">
+                  <CardHeader className="border-b border-border/50 bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-base text-foreground">Variabel Template</CardTitle>
+                        <CardDescription>
+                          Gunakan variabel berikut dalam template, sistem akan mengganti otomatis
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {templateVariables.map((v, index) => (
+                        <motion.div 
+                          key={v.var} 
+                          className="flex items-start gap-2 p-2 rounded-lg hover:bg-muted/30 transition-colors"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                        >
+                          <code className="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-mono shrink-0">
+                            {v.var}
+                          </code>
+                          <span className="text-sm text-muted-foreground">{v.desc}</span>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Share Template */}
+              <motion.div variants={cardVariants} whileHover="hover">
+                <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg shadow-primary/5 overflow-hidden">
+                  <CardHeader className="border-b border-border/50 bg-muted/30">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-green-500/10">
+                          <MessageSquare className="w-5 h-5 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-foreground">Template Share Tiket</CardTitle>
+                          <CardDescription>
+                            Template pesan WA untuk share tiket ke grup
+                          </CardDescription>
+                        </div>
+                      </div>
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleCopyTemplate(settings.whatsappTemplates.shareTemplate)}
+                          className="border-border/50 hover:bg-muted/50"
+                        >
+                          <Copy className="w-4 h-4 mr-1" />
+                          Copy
+                        </Button>
+                      </motion.div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <Textarea
+                      value={settings.whatsappTemplates.shareTemplate}
+                      onChange={(e) => handleTemplateChange('shareTemplate', e.target.value)}
+                      className="min-h-[300px] font-mono text-sm bg-muted/30 border-border/50 focus:border-primary/50 focus:ring-primary/20"
+                      placeholder="Masukkan template share tiket..."
+                    />
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Update Template */}
+              <motion.div variants={cardVariants} whileHover="hover">
+                <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg shadow-primary/5 overflow-hidden">
+                  <CardHeader className="border-b border-border/50 bg-muted/30">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-blue-500/10">
+                          <MessageSquare className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-foreground">Template Update Progress</CardTitle>
+                          <CardDescription>
+                            Template untuk TA update progress
+                          </CardDescription>
+                        </div>
+                      </div>
+                      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleCopyTemplate(settings.whatsappTemplates.updateTemplate)}
+                          className="border-border/50 hover:bg-muted/50"
+                        >
+                          <Copy className="w-4 h-4 mr-1" />
+                          Copy
+                        </Button>
+                      </motion.div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <Textarea
+                      value={settings.whatsappTemplates.updateTemplate}
+                      onChange={(e) => handleTemplateChange('updateTemplate', e.target.value)}
+                      className="min-h-[250px] font-mono text-sm bg-muted/30 border-border/50 focus:border-primary/50 focus:ring-primary/20"
+                      placeholder="Masukkan template update progress..."
+                    />
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
+          </Tabs>
+        </motion.div>
+      </motion.div>
     </Layout>
   );
 };

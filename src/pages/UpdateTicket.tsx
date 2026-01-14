@@ -30,7 +30,7 @@ import {
   Timer,
   FileWarning,
   Loader2,
-  Sparkles
+  Ticket as TicketIcon
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTicket, useUpdateTicket, useAddProgressUpdate } from '@/hooks/useTickets';
@@ -40,6 +40,7 @@ import { useDropdownOptions } from '@/hooks/useDropdownOptions';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTeknisi } from '@/hooks/useTeknisi';
 import { TicketStatus, TTRCompliance } from '@/types/ticket';
+import SEO from '@/components/SEO';
 
 interface UpdateFormData {
   statusTiket: string;
@@ -304,7 +305,6 @@ const UpdateTicket = () => {
         updates: updates 
       });
 
-      // Add progress update if there's a message
       if (formData.progressSaatIni && formData.progressSaatIni.trim() !== '') {
         await addProgressMutation.mutateAsync({
           ticket_id: id!,
@@ -471,6 +471,12 @@ const UpdateTicket = () => {
 
   return (
     <Layout>
+      {ticket && (
+        <SEO 
+          title={`Update ${Array.isArray(ticket.inc_numbers) ? ticket.inc_numbers[0] : ticket.inc_numbers || 'Tiket'}`} 
+          description={`Halaman update untuk tiket ${ticket.site_name}`}
+        />
+      )} 
       <motion.div 
         className="space-y-6 max-w-5xl mx-auto pb-8"
         variants={containerVariants}
@@ -497,7 +503,7 @@ const UpdateTicket = () => {
               transition={{ delay: 0.1 }}
             >
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
-                <Sparkles className="w-5 h-5 text-primary-foreground" />
+                <TicketIcon className="w-5 h-5 text-primary-foreground" />
               </div>
               Update Tiket
             </motion.h1>
@@ -516,7 +522,7 @@ const UpdateTicket = () => {
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              Simpan Update
+              Simpan
             </Button>
           </motion.div>
         </motion.div>

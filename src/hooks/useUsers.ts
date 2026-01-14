@@ -3,8 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types/ticket';
 import { toast } from 'sonner';
 
-const STORAGE_KEY = 'app_users';
-
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -29,6 +27,7 @@ export const useUsers = () => {
           id: profile.user_id,
           name: profile.name,
           role: (userRole?.role as UserRole) || 'guest',
+          email: profile.email || undefined,
           phone: profile.phone || undefined,
           area: profile.area || undefined,
           isActive: true 
@@ -58,17 +57,35 @@ export const useUsers = () => {
     };
   }, []);
 
-  const saveUsers = (newUsers: User[]) => {
-    setUsers(newUsers);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newUsers));
-  };
-
   const addUser = async (userData: any) => {
-    toast.info("Untuk menambahkan User Login baru, silakan gunakan menu Sign Up atau Supabase Dashboard.", {
-      description: "Fitur 'Tambah Pengguna' dari dalam aplikasi memerlukan akses Admin API (Server-side).",
-      duration: 6000
-    });
-    throw new Error("Action not supported client-side");
+    try {
+      if (!userData.email || !userData.password) {
+        throw new Error("Email dan Password wajib diisi");
+      }
+
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: userData.email,
+          password: userData.password,
+          name: userData.name,
+          role: userData.role,
+          phone: userData.phone,
+          area: userData.area
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success('Pengguna baru berhasil dibuat!');
+
+      await fetchUsers();
+      
+    } catch (error: any) {
+      console.error('Error adding user:', error);
+      toast.error(error.message || 'Gagal membuat pengguna baru');
+      throw error;
+    }
   };
 
   const updateUser = async (id: string, userData: Partial<User>) => {

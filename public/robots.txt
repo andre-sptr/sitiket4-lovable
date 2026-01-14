@@ -12,3 +12,7 @@ Allow: /
 
 User-agent: *
 Allow: /
+Allow: /login
+Disallow: /dashboard
+Disallow: /tickets
+Disallow: /users

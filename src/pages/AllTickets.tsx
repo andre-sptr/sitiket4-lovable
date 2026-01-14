@@ -38,11 +38,14 @@ import { id } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
+import SEO from '@/components/SEO';
+import { FilterCombobox } from '@/components/FilterCombobox';
 
 const statusOptions: TicketStatus[] = [
   'OPEN',
   'ASSIGNED',
   'ONPROGRESS',
+  'PENDING',
   'TEMPORARY',
   'WAITING_MATERIAL',
   'WAITING_ACCESS',
@@ -237,7 +240,7 @@ const AllTickets = () => {
         <SelectTrigger className="w-full transition-all duration-200 hover:border-primary/50 focus:ring-primary/20">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="max-h-[200px] overflow-y-auto">
           <SelectItem value="ALL">{allLabel}</SelectItem>
           {options.map(option => (
             <SelectItem key={option} value={option}>
@@ -251,6 +254,7 @@ const AllTickets = () => {
 
   return (
     <Layout>
+      <SEO title="Semua Tiket" description="Daftar seluruh tiket gangguan Telkom Infra." />
       <div className="space-y-4 md:space-y-6">
         <motion.div 
           className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
@@ -398,7 +402,7 @@ const AllTickets = () => {
                       <SelectTrigger className="transition-all duration-200 hover:border-primary/50">
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="max-h-[190px] overflow-y-auto">
                         <SelectItem value="ALL">Semua Status</SelectItem>
                         {statusOptions.map(status => (
                           <SelectItem key={status} value={status}>
@@ -424,11 +428,11 @@ const AllTickets = () => {
                   </div>
 
                   <FilterSelect
-                    label="Provider"
+                    label="Pelanggan"
                     value={providerFilter}
                     onValueChange={setProviderFilter}
                     options={filterOptions.providers}
-                    placeholder="Provider"
+                    placeholder="Pelanggan"
                   />
 
                   <FilterSelect
@@ -545,7 +549,7 @@ const AllTickets = () => {
               <SelectTrigger className="w-[150px] transition-all duration-200 hover:border-primary/50">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[190px] overflow-y-auto">
                 <SelectItem value="ALL">Semua Status</SelectItem>
                 {statusOptions.map(status => (
                   <SelectItem key={status} value={status}>
@@ -568,10 +572,10 @@ const AllTickets = () => {
 
             <Select value={providerFilter} onValueChange={setProviderFilter}>
               <SelectTrigger className="w-[120px] transition-all duration-200 hover:border-primary/50">
-                <SelectValue placeholder="Provider" />
+                <SelectValue placeholder="Pelanggan" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Provider</SelectItem>
+              <SelectContent className="max-h-[190px] overflow-y-auto">
+                <SelectItem value="ALL">Pelanggan</SelectItem>
                 {filterOptions.providers.map(provider => (
                   <SelectItem key={provider} value={provider}>
                     {provider}
@@ -580,19 +584,13 @@ const AllTickets = () => {
               </SelectContent>
             </Select>
 
-            <Select value={kategoriFilter} onValueChange={setKategoriFilter}>
-              <SelectTrigger className="w-[130px] transition-all duration-200 hover:border-primary/50">
-                <SelectValue placeholder="Kategori" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Saverity</SelectItem>
-                {filterOptions.kategoris.map(kategori => (
-                  <SelectItem key={kategori} value={kategori}>
-                    {kategori}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <FilterCombobox
+              value={kategoriFilter}
+              onValueChange={setKategoriFilter}
+              options={filterOptions.kategoris}
+              placeholder="Saverity"
+              className="w-[150px]"
+            />
 
             <Select value={jarakFilter} onValueChange={setJarakFilter}>
               <SelectTrigger className="w-[120px] transition-all duration-200 hover:border-primary/50">

@@ -51,6 +51,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { motion, AnimatePresence } from 'framer-motion';
+import SEO from '@/components/SEO';
+import { ComboboxField } from '@/components/ComboboxField';
 
 interface TicketFormData {
   hsa: string;
@@ -358,7 +360,7 @@ const ImportTicket = () => {
           >
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
-          <SelectContent className="bg-popover border shadow-lg z-50 max-h-[200px]">
+          <SelectContent className="bg-popover border shadow-lg z-50 max-h-[180px]">
             {options.map(opt => (
               <SelectItem 
                 key={opt} 
@@ -463,8 +465,8 @@ const ImportTicket = () => {
 
   return (
     <Layout>
+      <SEO title="Input Tiket Baru" />
       <div className="space-y-6 max-w-5xl mx-auto pb-8">
-        {/* Header Section */}
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -513,7 +515,6 @@ const ImportTicket = () => {
           </div>
         </motion.div>
 
-        {/* Error Summary */}
         <AnimatePresence>
           {hasErrors && Object.keys(touched).length > 0 && (
             <motion.div
@@ -546,9 +547,7 @@ const ImportTicket = () => {
           )}
         </AnimatePresence>
 
-        {/* Form Cards */}
         <div className="grid gap-6">
-          {/* Location & Category Card */}
           <motion.div
             custom={0}
             variants={cardVariants}
@@ -598,13 +597,20 @@ const ImportTicket = () => {
                   </div>
                   <SelectField label="Stake Holder" field="stakeHolder" options={DROPDOWN_OPTIONS.stakeHolder} />
                   <SelectField label="Jenis Pelanggan" field="jenisPelanggan" options={DROPDOWN_OPTIONS.jenisPelanggan} />
-                  <SelectField label="Saverity" field="kategori" options={DROPDOWN_OPTIONS.kategori} />
+                  <ComboboxField 
+                    label="Saverity" 
+                    value={formData.kategori}
+                    options={DROPDOWN_OPTIONS.kategori}
+                    onChange={(val) => updateField('kategori', val)}
+                    onBlur={() => markTouched('kategori')}
+                    error={getFieldError('kategori')}
+                    required={isFieldRequired('kategori')}
+                  />
                 </div>
               </CardContent>
             </Card>
           </motion.div>
 
-          {/* Ticket Information Card */}
           <motion.div
             custom={1}
             variants={cardVariants}
@@ -746,7 +752,6 @@ const ImportTicket = () => {
             </Card>
           </motion.div>
 
-          {/* Customer & Site Card */}
           <motion.div
             custom={2}
             variants={cardVariants}
@@ -894,7 +899,6 @@ const ImportTicket = () => {
             </Card>
           </motion.div>
 
-          {/* Technician & Team Card */}
           <motion.div
             custom={3}
             variants={cardVariants}
@@ -939,7 +943,7 @@ const ImportTicket = () => {
                       </PopoverTrigger>
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                         <Command>
-                          <CommandInput placeholder="Cari teknisi..." className="h-10" />
+                          <CommandInput placeholder="Cari Teknisi..." className="h-10" />
                           <CommandList>
                             <CommandEmpty>Teknisi tidak ditemukan.</CommandEmpty>
                             <CommandGroup>
@@ -1007,7 +1011,6 @@ const ImportTicket = () => {
           </motion.div>
         </div>
 
-        {/* Footer Actions */}
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -1020,7 +1023,7 @@ const ImportTicket = () => {
             className="gap-2 icon-hover-spin"
           >
             <RotateCcw className="w-4 h-4" />
-            Reset Form
+            Reset
           </Button>
           <Button 
             onClick={handleSubmit} 

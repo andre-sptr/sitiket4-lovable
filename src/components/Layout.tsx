@@ -55,7 +55,6 @@ const guestNavItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/tickets', label: 'Semua Tiket', icon: Ticket },
   { path: '/reports', label: 'Laporan', icon: BarChart3 },
-  { path: '/users', label: 'Pengguna', icon: Users },
 ];
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {

@@ -20,10 +20,11 @@ interface StatusBadgeProps {
   size?: 'sm' | 'default';
 }
 
-const statusVariantMap: Record<TicketStatus, 'open' | 'assigned' | 'onprogress' | 'temporary' | 'waiting' | 'closed'> = {
+const statusVariantMap: Record<TicketStatus, 'open' | 'assigned' | 'onprogress' | 'pending' | 'temporary' | 'waiting' | 'closed'> = {
   OPEN: 'open',
   ASSIGNED: 'assigned',
   ONPROGRESS: 'onprogress',
+  PENDING: 'pending',
   TEMPORARY: 'temporary',
   WAITING_MATERIAL: 'waiting',
   WAITING_ACCESS: 'waiting',
@@ -35,6 +36,7 @@ const statusIconMap: Record<TicketStatus, React.ReactNode> = {
   OPEN: <Clock className="w-3 h-3" />,
   ASSIGNED: <UserCheck className="w-3 h-3" />,
   ONPROGRESS: <Loader2 className="w-3 h-3 animate-spin" />,
+  PENDING: <Clock className="w-3 h-3" />,
   TEMPORARY: <Wrench className="w-3 h-3" />,
   WAITING_MATERIAL: <Package className="w-3 h-3" />,
   WAITING_ACCESS: <Lock className="w-3 h-3" />,
