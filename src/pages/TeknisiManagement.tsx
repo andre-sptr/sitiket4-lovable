@@ -140,7 +140,7 @@ const TeknisiManagement = () => {
   if (user?.role === 'guest') {
     return (
       <Layout>
-        <SEO title="Kelola Teknisi" />
+        <SEO title="Kelola Teknisi" description="Manajemen data teknisi lapangan - tambah, edit, dan kelola status teknisi untuk penugasan tiket." noIndex={true} />
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -331,7 +331,7 @@ const TeknisiManagement = () => {
 
   return (
     <Layout>
-      <SEO title="Kelola Teknisi" />
+      <SEO title="Kelola Teknisi" description="Manajemen data teknisi lapangan - tambah, edit, dan kelola status teknisi untuk penugasan tiket." noIndex={true} />
       <div className="space-y-6 max-w-6xl mx-auto pb-8">
         {/* Header Section */}
         <motion.div 

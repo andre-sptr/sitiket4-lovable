@@ -266,7 +266,7 @@ const UserManagement = () => {
   if (currentUser?.role === 'guest') {
     return (
       <Layout>
-        <SEO title="Manajemen Pengguna" />
+        <SEO title="Manajemen Pengguna" description="Kelola pengguna sistem - admin, help desk, dan guest. Atur role dan akses pengguna." noIndex={true} />
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -298,7 +298,7 @@ const UserManagement = () => {
 
   return (
     <Layout>
-      <SEO title="Manajemen Pengguna" />
+      <SEO title="Manajemen Pengguna" description="Kelola pengguna sistem - admin, help desk, dan guest. Atur role dan akses pengguna." noIndex={true} />
       <div className="space-y-6 max-w-6xl mx-auto pb-8">
         {/* Header Section */}
         <motion.div 
