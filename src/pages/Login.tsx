@@ -32,25 +32,25 @@ const itemVariants: Variants = {
   },
 };
 
-const floatingVariants: Variants = {
+const floatingVariants = {
   animate: {
     y: [-10, 10, -10],
     transition: {
       duration: 6,
       repeat: Infinity,
-      ease: "easeInOut",
+      ease: "easeInOut" as const,
     },
   },
 };
 
-const pulseVariants: Variants = {
+const pulseVariants = {
   animate: {
     scale: [1, 1.05, 1],
     opacity: [0.5, 0.8, 0.5],
     transition: {
       duration: 3,
       repeat: Infinity,
-      ease: "easeInOut",
+      ease: "easeInOut" as const,
     },
   },
 };

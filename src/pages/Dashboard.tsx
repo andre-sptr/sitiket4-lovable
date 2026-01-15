@@ -229,8 +229,6 @@ const Dashboard = () => {
                 <TicketCard 
                   key={ticket.id}
                   ticket={ticket} 
-                  onCopyWhatsApp={handleCopyWhatsApp}
-                  index={index}
                 />
               ))
             )}

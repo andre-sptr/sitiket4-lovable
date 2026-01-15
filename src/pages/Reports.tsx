@@ -240,7 +240,7 @@ const Reports = () => {
       
       const closedOnDay = ticketsOnDay.filter(t => t.status === 'CLOSED');
       const avgTTR = closedOnDay.length > 0 
-        ? closedOnDay.reduce((acc, t) => acc + (t.ttr_real_hours || 0), 0) / closedOnDay.length 
+        ? closedOnDay.reduce((acc, t) => acc + (t.ttr_target_hours || 0), 0) / closedOnDay.length 
         : 0;
       
       days.push({
@@ -327,9 +327,9 @@ const Reports = () => {
   }, [filteredTickets]);
 
   const avgResolutionTime = useMemo(() => {
-    const closedTickets = filteredTickets.filter(t => t.status === 'CLOSED' && t.ttr_real_hours);
+    const closedTickets = filteredTickets.filter(t => t.status === 'CLOSED');
     if (closedTickets.length === 0) return 0;
-    const total = closedTickets.reduce((acc, t) => acc + (t.ttr_real_hours || 0), 0);
+    const total = closedTickets.reduce((acc, t) => acc + (t.ttr_target_hours || 0), 0);
     return Math.round((total / closedTickets.length) * 10) / 10;
   }, [filteredTickets]);
 
@@ -427,10 +427,10 @@ const Reports = () => {
           kategori: ticket.kategori,
           status: ticket.status,
           open: ticket.jam_open ? format(new Date(ticket.jam_open), 'dd/MM/yy HH:mm') : '-',
-          close: ticket.status === 'CLOSED' && ticket.ttr_real_hours 
-            ? format(new Date(new Date(ticket.jam_open).getTime() + ticket.ttr_real_hours * 3600 * 1000), 'dd/MM/yy HH:mm') 
+          close: ticket.status === 'CLOSED' 
+            ? format(new Date(ticket.updated_at), 'dd/MM/yy HH:mm') 
             : '-',
-          ttr: ticket.ttr_real_hours ? ticket.ttr_real_hours.toFixed(1) : '-',
+          ttr: ticket.ttr_target_hours ? ticket.ttr_target_hours.toString() : '-',
           teknisi: Array.isArray(ticket.teknisi_list) ? ticket.teknisi_list.join(', ') : '',
           penyebab: ticket.penyebab || '-'
         });

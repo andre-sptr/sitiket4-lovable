@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
@@ -16,78 +18,63 @@ export type Database = {
         Row: {
           area: string | null
           created_at: string
+          email: string | null
           id: string
           name: string
           phone: string | null
           updated_at: string
           user_id: string
-          email: string | null
         }
         Insert: {
           area?: string | null
           created_at?: string
+          email?: string | null
           id?: string
-          name: string
+          name?: string
           phone?: string | null
           updated_at?: string
           user_id: string
-          email?: string | null
         }
         Update: {
           area?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           name?: string
           phone?: string | null
           updated_at?: string
           user_id?: string
-          email?: string | null
         }
         Relationships: []
       }
       progress_updates: {
         Row: {
-          attachments: string[] | null
           created_at: string
           created_by: string | null
           id: string
-          location_lat: number | null
-          location_lon: number | null
           message: string
-          source: string
-          status_after_update:
-            | Database["public"]["Enums"]["ticket_status"]
-            | null
+          source: string | null
+          status_after_update: string | null
           ticket_id: string
           timestamp: string
         }
         Insert: {
-          attachments?: string[] | null
           created_at?: string
           created_by?: string | null
           id?: string
-          location_lat?: number | null
-          location_lon?: number | null
           message: string
-          source: string
-          status_after_update?:
-            | Database["public"]["Enums"]["ticket_status"]
-            | null
+          source?: string | null
+          status_after_update?: string | null
           ticket_id: string
           timestamp?: string
         }
         Update: {
-          attachments?: string[] | null
           created_at?: string
           created_by?: string | null
           id?: string
-          location_lat?: number | null
-          location_lon?: number | null
           message?: string
-          source?: string
-          status_after_update?:
-            | Database["public"]["Enums"]["ticket_status"]
-            | null
+          source?: string | null
+          status_after_update?: string | null
           ticket_id?: string
           timestamp?: string
         }
@@ -101,162 +88,164 @@ export type Database = {
           },
         ]
       }
+      settings: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       teknisi: {
         Row: {
           area: string | null
           created_at: string
-          employee_id: string
           id: string
           is_active: boolean
           name: string
           phone: string | null
           updated_at: string
-          user_id: string | null
         }
         Insert: {
           area?: string | null
           created_at?: string
-          employee_id: string
           id?: string
           is_active?: boolean
           name: string
           phone?: string | null
           updated_at?: string
-          user_id?: string | null
         }
         Update: {
           area?: string | null
           created_at?: string
-          employee_id?: string
           id?: string
           is_active?: boolean
           name?: string
           phone?: string | null
           updated_at?: string
-          user_id?: string | null
         }
         Relationships: []
       }
       tickets: {
         Row: {
-          admin_notes: string | null
-          assigned_at: string | null
-          assigned_by: string | null
           assigned_to: string | null
           created_at: string
           created_by: string | null
           id: string
-          inc_gamas: string | null
           inc_numbers: string[]
-          is_permanent: boolean
           jam_open: string
-          jarak_km_range: string | null
-          kategori: string
-          kjd: string | null
+          jarak_km: number | null
+          kategori: string | null
           latitude: number | null
-          lokasi_text: string
+          lokasi_text: string | null
           longitude: number | null
           max_jam_close: string
           network_element: string | null
           penyebab: string | null
-          permanent_notes: string | null
-          provider: string
-          raw_ticket_text: string | null
-          segmen: string | null
-          sisa_ttr_hours: number
+          provider: string | null
+          segment: string | null
+          sisa_ttr_hours: number | null
           site_code: string
           site_name: string
-          status: Database["public"]["Enums"]["ticket_status"]
+          status: string
           teknisi_list: string[] | null
-          ttr_compliance: Database["public"]["Enums"]["ttr_compliance"]
-          ttr_real_hours: number | null
+          ttr_compliance: string | null
           ttr_target_hours: number
           updated_at: string
         }
         Insert: {
-          admin_notes?: string | null
-          assigned_at?: string | null
-          assigned_by?: string | null
           assigned_to?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
-          inc_gamas?: string | null
           inc_numbers?: string[]
-          is_permanent?: boolean
           jam_open?: string
-          jarak_km_range?: string | null
-          kategori: string
-          kjd?: string | null
+          jarak_km?: number | null
+          kategori?: string | null
           latitude?: number | null
-          lokasi_text: string
+          lokasi_text?: string | null
           longitude?: number | null
           max_jam_close: string
           network_element?: string | null
           penyebab?: string | null
-          permanent_notes?: string | null
-          provider?: string
-          raw_ticket_text?: string | null
-          segmen?: string | null
-          sisa_ttr_hours?: number
+          provider?: string | null
+          segment?: string | null
+          sisa_ttr_hours?: number | null
           site_code: string
           site_name: string
-          status?: Database["public"]["Enums"]["ticket_status"]
+          status?: string
           teknisi_list?: string[] | null
-          ttr_compliance?: Database["public"]["Enums"]["ttr_compliance"]
-          ttr_real_hours?: number | null
+          ttr_compliance?: string | null
           ttr_target_hours?: number
           updated_at?: string
         }
         Update: {
-          admin_notes?: string | null
-          assigned_at?: string | null
-          assigned_by?: string | null
           assigned_to?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
-          inc_gamas?: string | null
           inc_numbers?: string[]
-          is_permanent?: boolean
           jam_open?: string
-          jarak_km_range?: string | null
-          kategori?: string
-          kjd?: string | null
+          jarak_km?: number | null
+          kategori?: string | null
           latitude?: number | null
-          lokasi_text?: string
+          lokasi_text?: string | null
           longitude?: number | null
           max_jam_close?: string
           network_element?: string | null
           penyebab?: string | null
-          permanent_notes?: string | null
-          provider?: string
-          raw_ticket_text?: string | null
-          segmen?: string | null
-          sisa_ttr_hours?: number
+          provider?: string | null
+          segment?: string | null
+          sisa_ttr_hours?: number | null
           site_code?: string
           site_name?: string
-          status?: Database["public"]["Enums"]["ticket_status"]
+          status?: string
           teknisi_list?: string[] | null
-          ttr_compliance?: Database["public"]["Enums"]["ttr_compliance"]
-          ttr_real_hours?: number | null
+          ttr_compliance?: string | null
           ttr_target_hours?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "teknisi"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
+          created_at: string
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          created_at?: string
           id?: string
-          role: Database["public"]["Enums"]["app_role"]
+          role?: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
@@ -268,6 +257,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -278,17 +271,6 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "hd" | "guest"
-      ticket_status:
-        | "OPEN"
-        | "ASSIGNED"
-        | "ONPROGRESS"
-        | "PENDING"
-        | "TEMPORARY"
-        | "WAITING_MATERIAL"
-        | "WAITING_ACCESS"
-        | "WAITING_COORDINATION"
-        | "CLOSED"
-      ttr_compliance: "COMPLY" | "NOT COMPLY"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -417,18 +399,6 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "hd", "guest"],
-      ticket_status: [
-        "OPEN",
-        "ASSIGNED",
-        "ONPROGRESS",
-        "PENDING",
-        "TEMPORARY",
-        "WAITING_MATERIAL",
-        "WAITING_ACCESS",
-        "WAITING_COORDINATION",
-        "CLOSED",
-      ],
-      ttr_compliance: ["COMPLY", "NOT COMPLY"],
     },
   },
 } as const

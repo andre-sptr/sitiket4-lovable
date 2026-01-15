@@ -176,8 +176,12 @@ const UpdateTicket = () => {
         compliance: ticket.ttr_compliance || '', 
         ttrSisa: ticket.sisa_ttr_hours?.toString() || '',
         penyebabGangguan: ticket.penyebab || '',
-        segmenTerganggu: ticket.segmen || '',
-        permanenTemporer: ticket.is_permanent ? 'PERMANEN' : 'TEMPORER',
+        segmenTerganggu: ticket.segment || '',
+        permanenTemporer: 'TEMPORER',
+        teknisi1: ticket.teknisi_list?.[0] || '',
+        teknisi2: ticket.teknisi_list?.[1] || '',
+        teknisi3: ticket.teknisi_list?.[2] || '',
+        teknisi4: ticket.teknisi_list?.[3] || '',
       }));
     }
   }, [ticket]);
@@ -552,7 +556,7 @@ const UpdateTicket = () => {
                 <div className="h-10 w-px bg-border/50 hidden md:block" />
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">Status</p>
-                  <StatusBadge status={ticket.status} />
+                  <StatusBadge status={ticket.status as TicketStatus} />
                 </div>
                 <div className="h-10 w-px bg-border/50 hidden md:block" />
                 <div>
@@ -562,7 +566,7 @@ const UpdateTicket = () => {
                 <div className="h-10 w-px bg-border/50 hidden md:block" />
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">TTR Sisa</p>
-                  <TTRBadge hours={ticket.sisa_ttr_hours} />
+                  <TTRBadge targetDate={ticket.max_jam_close} status={ticket.status as TicketStatus} />
                 </div>
               </div>
             </CardContent>

@@ -296,13 +296,10 @@ const ImportTicket = () => {
         max_jam_close: maxJamClose.toISOString(),
         status: initialStatus,
         provider: formData.jenisPelanggan,
-        kjd: formData.kjd || null,
-        inc_gamas: formData.indukGamas || null,
         teknisi_list: formData.teknisi1 ? [formData.teknisi1] : [],
         latitude: isNaN(lat!) ? null : lat,
         longitude: isNaN(lon!) ? null : lon,
         created_by: user?.id,
-        raw_ticket_text: formData.summary
       });
       toast({
         title: "Tiket Berhasil Disimpan",

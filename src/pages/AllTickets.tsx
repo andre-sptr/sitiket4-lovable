@@ -860,8 +860,6 @@ const AllTickets = () => {
                   <TicketCard 
                     key={ticket.id}
                     ticket={ticket} 
-                    onCopyWhatsApp={handleCopyWhatsApp}
-                    index={index}
                   />
                 ))}
               </AnimatePresence>
