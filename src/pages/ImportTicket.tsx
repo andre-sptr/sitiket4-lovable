@@ -465,7 +465,7 @@ const ImportTicket = () => {
 
   return (
     <Layout>
-      <SEO title="Input Tiket Baru" />
+      <SEO title="Input Tiket Baru" description="Form input tiket gangguan baru. Tambahkan data site, kategori, teknisi, dan informasi gangguan ke sistem." />
       <div className="space-y-6 max-w-5xl mx-auto pb-8">
         <motion.div 
           initial={{ opacity: 0, y: -10 }}

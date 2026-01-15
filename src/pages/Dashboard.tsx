@@ -68,7 +68,7 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <SEO title="Dashboard" />
+      <SEO title="Dashboard" description="Dashboard monitoring tiket gangguan hari ini. Lihat statistik TTR, status tiket aktif, dan performa penanganan secara real-time." />
       <div className="space-y-6 lg:space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>

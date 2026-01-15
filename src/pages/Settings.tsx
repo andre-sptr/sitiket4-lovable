@@ -403,7 +403,7 @@ const Settings = () => {
 
   return (
     <Layout>
-      <SEO title="Pengaturan" />
+      <SEO title="Pengaturan" description="Konfigurasi sistem SiTiket - atur threshold TTR, template WhatsApp, dan opsi dropdown untuk manajemen tiket." noIndex={true} />
       
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
