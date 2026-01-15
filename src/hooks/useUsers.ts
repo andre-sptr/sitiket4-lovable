@@ -88,60 +88,50 @@ export const useUsers = () => {
     }
   };
 
-  const updateUser = async (id: string, userData: Partial<User>) => {
+  const updateUser = async (id: string, userData: Partial<User> & { password?: string }) => {
     try {
-      if (userData.name || userData.phone || userData.area) {
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            name: userData.name,
-            phone: userData.phone,
-            area: userData.area
-          })
-          .eq('user_id', id);
-        
-        if (error) throw error;
-      }
+      const { data, error } = await supabase.functions.invoke('edit-user', {
+        body: {
+          userId: id,
+          email: userData.email,   
+          password: userData.password,
+          name: userData.name,
+          role: userData.role,
+          phone: userData.phone,
+          area: userData.area
+        },
+      });
 
-      if (userData.role) {
-        const { data: existingRole } = await supabase
-          .from('user_roles')
-          .select('id')
-          .eq('user_id', id)
-          .maybeSingle();
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-        if (existingRole) {
-          const { error } = await supabase
-            .from('user_roles')
-            .update({ role: userData.role as any })
-            .eq('user_id', id);
-          if (error) throw error;
-        } else {
-          const { error } = await supabase
-            .from('user_roles')
-            .insert({ user_id: id, role: userData.role as any });
-          if (error) throw error;
-        }
-      }
+      toast.success('Pengguna berhasil diperbarui');
+      
+      await fetchUsers();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating user:', error);
+      toast.error(error.message || 'Gagal memperbarui pengguna');
       throw error;
     }
   };
 
   const deleteUser = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('user_id', id);
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { user_id: id }
+      });
 
       if (error) throw error;
-      toast.success('Profil pengguna dihapus (Akun login mungkin masih ada di Auth)');
-    } catch (error) {
+      if (data?.error) throw new Error(data.error);
+
+      toast.success('Pengguna berhasil dihapus');
+      
+      await fetchUsers(); 
+      
+    } catch (error: any) {
       console.error('Error deleting user:', error);
-      toast.error('Gagal menghapus pengguna');
+      toast.error(error.message || 'Gagal menghapus pengguna');
     }
   };
 

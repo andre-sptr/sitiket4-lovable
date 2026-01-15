@@ -21,7 +21,10 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Percent,
-  LayoutGrid
+  LayoutGrid,
+  FileText,
+  DownloadCloud,
+  ChevronDown
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -48,8 +51,6 @@ import {
   RadialBarChart, 
   RadialBar,
   ResponsiveContainer,
-  Tooltip,
-  Legend
 } from 'recharts';
 import { useMemo, useState } from 'react';
 import { format, subDays, isWithinInterval, startOfDay, endOfDay, differenceInHours } from 'date-fns';
@@ -61,10 +62,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { motion } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SEO from '@/components/SEO';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -351,108 +361,152 @@ const Reports = () => {
   const CATEGORY_COLORS = ['hsl(var(--primary))', 'hsl(45 93% 47%)', 'hsl(262 83% 58%)', 'hsl(174 72% 40%)', 'hsl(340 75% 55%)'];
   const STATUS_COLORS = ['hsl(var(--primary))', 'hsl(45 93% 47%)', 'hsl(25 95% 53%)', 'hsl(262 83% 58%)', 'hsl(142 76% 36%)'];
 
-  const exportToCSV = (exportType: 'full' | 'summary') => {
+  const exportToExcel = async (exportType: 'full' | 'summary') => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Laporan');
     const dateFrom = format(dateRange.from, 'yyyy-MM-dd');
     const dateTo = format(dateRange.to, 'yyyy-MM-dd');
+    const timestamp = format(new Date(), 'dd/MM/yyyy HH:mm');
     
-    const escapeCsv = (str: string | number | null | undefined) => {
-      if (str === null || str === undefined) return '';
-      const stringValue = String(str);
-      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-        return `"${stringValue.replace(/"/g, '""')}"`;
-      }
-      return stringValue;
+    const headerStyle: Partial<ExcelJS.Style> = {
+      font: { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } },
+      alignment: { horizontal: 'center', vertical: 'middle' },
+      border: { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } }
     };
 
-    let csvContent = '';
-    let filename = '';
+    const cellStyle: Partial<ExcelJS.Style> = {
+      border: { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } },
+      alignment: { vertical: 'middle', wrapText: true }
+    };
+
+    const addReportHeader = (title: string) => {
+      worksheet.mergeCells('A1:F1');
+      const titleCell = worksheet.getCell('A1');
+      titleCell.value = `SITIKET - ${title}`;
+      titleCell.font = { bold: true, size: 16, color: { argb: 'FF0F172A' } };
+      titleCell.alignment = { horizontal: 'center' };
+
+      worksheet.mergeCells('A2:F2');
+      worksheet.getCell('A2').value = `Periode: ${format(dateRange.from, 'dd MMM yyyy', { locale: id })} - ${format(dateRange.to, 'dd MMM yyyy', { locale: id })}`;
+      worksheet.getCell('A2').alignment = { horizontal: 'center' };
+
+      worksheet.mergeCells('A3:F3');
+      worksheet.getCell('A3').value = `Dicetak pada: ${timestamp}`;
+      worksheet.getCell('A3').alignment = { horizontal: 'center' };
+      
+      worksheet.addRow([]);
+    };
 
     if (exportType === 'full') {
-      filename = `laporan-tiket-lengkap_${dateFrom}_${dateTo}.csv`;
-      
-      const headers = [
-        'ID Tiket',
-        'Provider',
-        'No. INC',
-        'Site Code',
-        'Site Name',
-        'Kategori',
-        'Lokasi',
-        'Status',
-        'TTR Compliance',
-        'Jam Open',
-        'Max Jam Close',
-        'Sisa TTR (Jam)',
-        'TTR Real (Jam)',
-        'Teknisi',
-        'Penyebab',
-        'Catatan Permanen'
+      addReportHeader('LAPORAN TIKET LENGKAP');
+
+      worksheet.columns = [
+        { header: 'ID Tiket', key: 'id', width: 12 },
+        { header: 'Provider', key: 'provider', width: 12 },
+        { header: 'No. INC', key: 'inc', width: 22 },
+        { header: 'Site', key: 'site', width: 30 },
+        { header: 'Kategori', key: 'kategori', width: 18 },
+        { header: 'Status', key: 'status', width: 15 },
+        { header: 'Jam Open', key: 'open', width: 18 },
+        { header: 'Jam Close', key: 'close', width: 18 },
+        { header: 'TTR (Jam)', key: 'ttr', width: 12 },
+        { header: 'Teknisi', key: 'teknisi', width: 25 },
+        { header: 'Penyebab', key: 'penyebab', width: 35 },
       ];
-      
-      csvContent = headers.join(',') + '\n';
-      
+
+      const headerRow = worksheet.getRow(5);
+      headerRow.eachCell((cell) => { cell.style = headerStyle; });
+
       filteredTickets.forEach(ticket => {
-        const row = [
-          ticket.id,
-          ticket.provider,
-          Array.isArray(ticket.inc_numbers) ? ticket.inc_numbers.join('; ') : '',
-          ticket.site_code,
-          ticket.site_name,
-          ticket.kategori,
-          ticket.lokasi_text,
-          ticket.status,
-          ticket.ttr_compliance,
-          ticket.jam_open ? format(new Date(ticket.jam_open), 'yyyy-MM-dd HH:mm') : '',
-          ticket.max_jam_close ? format(new Date(ticket.max_jam_close), 'yyyy-MM-dd HH:mm') : '',
-          ticket.sisa_ttr_hours,
-          ticket.ttr_real_hours,
-          Array.isArray(ticket.teknisi_list) ? ticket.teknisi_list.join(', ') : '',
-          ticket.penyebab,
-          ticket.permanent_notes
-        ];
+        const row = worksheet.addRow({
+          id: ticket.id.substring(0, 8).toUpperCase(),
+          provider: ticket.provider,
+          inc: Array.isArray(ticket.inc_numbers) ? ticket.inc_numbers.join(', ') : '',
+          site: `${ticket.site_code} - ${ticket.site_name}`,
+          kategori: ticket.kategori,
+          status: ticket.status,
+          open: ticket.jam_open ? format(new Date(ticket.jam_open), 'dd/MM/yy HH:mm') : '-',
+          close: ticket.status === 'CLOSED' && ticket.ttr_real_hours 
+            ? format(new Date(new Date(ticket.jam_open).getTime() + ticket.ttr_real_hours * 3600 * 1000), 'dd/MM/yy HH:mm') 
+            : '-',
+          ttr: ticket.ttr_real_hours ? ticket.ttr_real_hours.toFixed(1) : '-',
+          teknisi: Array.isArray(ticket.teknisi_list) ? ticket.teknisi_list.join(', ') : '',
+          penyebab: ticket.penyebab || '-'
+        });
 
-        csvContent += row.map(escapeCsv).join(',') + '\n';
+        row.eachCell((cell) => { cell.style = cellStyle; });
+
+        const statusCell = row.getCell('status');
+        if (ticket.status === 'CLOSED') {
+          statusCell.font = { color: { argb: 'FF166534' }, bold: true };
+        } else if (ticket.status === 'OPEN') {
+          statusCell.font = { color: { argb: 'FFDC2626' }, bold: true };
+        } else if (ticket.status === 'ONPROGRESS') {
+          statusCell.font = { color: { argb: 'FFD97706' }, bold: true };
+        }
       });
+
     } else {
-      filename = `laporan-ringkasan_${dateFrom}_${dateTo}.csv`;
+      addReportHeader('RINGKASAN EKSEKUTIF');
 
-      csvContent = 'RINGKASAN LAPORAN TIKET\n';
-      csvContent += `Periode: ${escapeCsv(format(dateRange.from, 'dd MMM yyyy', { locale: id }))} - ${escapeCsv(format(dateRange.to, 'dd MMM yyyy', { locale: id }))}\n\n`;
+      worksheet.addRow(['RINGKASAN STATUS TIKET']);
+      worksheet.lastRow!.font = { bold: true, size: 12 };
       
-      csvContent += 'STATUS,JUMLAH\n';
-      statusData.forEach(s => {
-        csvContent += `${escapeCsv(s.name)},${s.value}\n`;
+      const headerRowStatus = worksheet.addRow(['Status', 'Jumlah']);
+      headerRowStatus.getCell(1).style = headerStyle;
+      headerRowStatus.getCell(2).style = headerStyle;
+
+      statusData.forEach(d => {
+        const row = worksheet.addRow([d.name, d.value]);
+        row.getCell(1).style = cellStyle;
+        row.getCell(2).style = cellStyle;
       });
-      
-      csvContent += '\nKATEGORI,JUMLAH,CLOSED,PERSENTASE SELESAI\n';
+      worksheet.addRow([]);
+
+      worksheet.addRow(['PERFORMA PER KATEGORI']);
+      worksheet.lastRow!.font = { bold: true, size: 12 };
+
+      const headerRowCat = worksheet.addRow(['Kategori', 'Total', 'Closed', '% Selesai']);
+      [1, 2, 3, 4].forEach(i => headerRowCat.getCell(i).style = headerStyle);
+
       categoryData.forEach(cat => {
         const categoryTickets = filteredTickets.filter(t => t.kategori === cat.category);
         const closed = categoryTickets.filter(t => t.status === 'CLOSED').length;
         const percentage = categoryTickets.length > 0 ? Math.round((closed / categoryTickets.length) * 100) : 0;
-        csvContent += `${escapeCsv(cat.name)},${cat.value},${closed},${percentage}%\n`;
+        
+        const row = worksheet.addRow([cat.name, cat.value, closed, `${percentage}%`]);
+        [1, 2, 3, 4].forEach(i => row.getCell(i).style = cellStyle);
       });
-      
-      csvContent += '\nSTATISTIK PER HARI\n';
-      csvContent += 'TANGGAL,OPEN,ON PROGRESS,CLOSED,TOTAL\n';
-      periodData.forEach(day => {
-        csvContent += `${escapeCsv(day.name)},${day.open},${day.onprogress},${day.closed},${day.total}\n`;
+      worksheet.addRow([]);
+
+      worksheet.addRow(['TRAFIK HARIAN']);
+      worksheet.lastRow!.font = { bold: true, size: 12 };
+
+      const headerRowDaily = worksheet.addRow(['Tanggal', 'Masuk (Open)', 'Selesai (Closed)', 'Total']);
+      [1, 2, 3, 4].forEach(i => headerRowDaily.getCell(i).style = headerStyle);
+
+      periodData.forEach(d => {
+        const row = worksheet.addRow([d.name, d.open, d.closed, d.total]);
+        [1, 2, 3, 4].forEach(i => row.getCell(i).style = cellStyle);
       });
+
+      worksheet.getColumn(1).width = 25;
+      worksheet.getColumn(2).width = 15;
+      worksheet.getColumn(3).width = 15;
+      worksheet.getColumn(4).width = 15;
     }
 
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const fileName = exportType === 'full' 
+      ? `Sitiket-Lengkap_${dateFrom}_${dateTo}.xlsx`
+      : `Sitiket-Ringkasan_${dateFrom}_${dateTo}.xlsx`;
+      
+    saveAs(new Blob([buffer]), fileName);
 
     toast({
       title: "Export Berhasil",
-      description: `File ${filename} berhasil diunduh`,
+      description: `File Excel berhasil diunduh: ${fileName}`,
     });
   };
 
@@ -490,29 +544,56 @@ const Reports = () => {
             </p>
           </div>
           <motion.div 
-            className="flex items-center gap-2 flex-wrap"
+            className="flex items-center gap-2"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="gap-2 transition-all hover:bg-primary hover:text-primary-foreground" 
-              onClick={() => exportToCSV('full')}
-            >
-              <FileSpreadsheet className="w-4 h-4" />
-              Export Lengkap
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="gap-2 transition-all hover:bg-primary hover:text-primary-foreground" 
-              onClick={() => exportToCSV('summary')}
-            >
-              <Download className="w-4 h-4" />
-              Export Ringkasan
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="gap-2 pl-3 pr-4 h-9 bg-background/50 backdrop-blur-sm border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all shadow-sm group"
+                >
+                  <div className="bg-primary/10 p-1 rounded-md group-hover:bg-primary/20 transition-colors">
+                    <DownloadCloud className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="text-sm font-medium">Export Data</span>
+                  <ChevronDown className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 p-2 glass-card">
+                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground px-2 py-1.5">
+                  Pilih Format Laporan (.xlsx)
+                </DropdownMenuLabel>
+                
+                <DropdownMenuItem 
+                  onClick={() => exportToExcel('summary')}
+                  className="rounded-md p-2 cursor-pointer focus:bg-primary/5 focus:text-primary mb-1 group"
+                >
+                  <div className="h-8 w-8 rounded-md bg-emerald-500/10 flex items-center justify-center mr-3 group-hover:bg-emerald-500/20 transition-colors">
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-medium text-sm">Laporan Ringkasan</span>
+                    <span className="text-[10px] text-muted-foreground">Statistik & angka penting</span>
+                  </div>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  onClick={() => exportToExcel('full')}
+                  className="rounded-md p-2 cursor-pointer focus:bg-primary/5 focus:text-primary group"
+                >
+                  <div className="h-8 w-8 rounded-md bg-blue-500/10 flex items-center justify-center mr-3 group-hover:bg-blue-500/20 transition-colors">
+                    <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-medium text-sm">Data Tiket Lengkap</span>
+                    <span className="text-[10px] text-muted-foreground">Semua detail (Raw Data)</span>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </motion.div>
         </motion.div>
 
@@ -943,7 +1024,7 @@ const Reports = () => {
                 {/* Category Pie Chart */}
                 <ChartCard 
                   title="Tiket per Severity" 
-                  description="Distribusi tiket berdasarkan severity/kategori"
+                  description="Distribusi tiket berdasarkan severity"
                   icon={PieChart}
                 >
                   <ChartContainer config={pieChartConfig} className="h-[320px] w-full">

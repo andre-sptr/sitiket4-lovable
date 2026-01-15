@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Layout } from '@/components/Layout';
 import { FormSkeleton } from '@/components/skeletons';
 import { Button } from '@/components/ui/button';
@@ -140,6 +140,9 @@ const ImportTicket = () => {
   const { user } = useAuth();
   const { options: DROPDOWN_OPTIONS } = useDropdownOptions();
   const { activeTeknisi } = useTeknisi();
+  const sortedTeknisi = useMemo(() => {
+    return [...activeTeknisi].sort((a, b) => a.name.localeCompare(b.name));
+  }, [activeTeknisi]);
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState<TicketFormData>(emptyForm);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -947,7 +950,7 @@ const ImportTicket = () => {
                           <CommandList>
                             <CommandEmpty>Teknisi tidak ditemukan.</CommandEmpty>
                             <CommandGroup>
-                              {activeTeknisi.map((teknisi) => (
+                              {sortedTeknisi.map((teknisi) => (
                                 <CommandItem
                                   key={teknisi.id}
                                   value={teknisi.name}

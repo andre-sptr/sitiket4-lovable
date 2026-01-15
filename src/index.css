@@ -114,20 +114,51 @@
     @apply border-border;
   }
 
-  /* Theme transition */
-  html {
-    transition: background-color 0.3s ease, color 0.3s ease;
+  /* View Transitions API - Theme Toggle Animation */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
   }
 
-  html *,
-  html *::before,
-  html *::after {
-    transition: background-color 0.3s ease, 
-                border-color 0.3s ease, 
-                color 0.3s ease,
-                fill 0.3s ease,
-                stroke 0.3s ease,
-                box-shadow 0.3s ease;
+  ::view-transition-old(root) {
+    z-index: 1;
+  }
+
+  ::view-transition-new(root) {
+    z-index: 9999;
+  }
+
+  /* Dark mode transition: new theme reveals with circular clip */
+  .dark::view-transition-new(root) {
+    clip-path: circle(0% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+    animation: theme-reveal 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  /* Light mode transition: old theme shrinks away */
+  .dark::view-transition-old(root) {
+    animation: none;
+  }
+
+  :root:not(.dark)::view-transition-new(root) {
+    clip-path: circle(0% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+    animation: theme-reveal 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  @keyframes theme-reveal {
+    from {
+      clip-path: circle(0% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+    }
+    to {
+      clip-path: circle(150% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+    }
+  }
+
+  /* Disable transitions during view transition */
+  html:has(::view-transition) *,
+  html:has(::view-transition) *::before,
+  html:has(::view-transition) *::after {
+    transition: none !important;
   }
 
   /* Disable transitions on page load */

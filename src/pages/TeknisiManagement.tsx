@@ -59,13 +59,21 @@ import {
   UserCheck,
   UserX,
   MoreVertical,
-  RefreshCcw
+  RefreshCcw,
+  Filter
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import SEO from '@/components/SEO';
 import { Separator } from '@/components/ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -99,8 +107,12 @@ const TeknisiManagement = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { teknisiList, isLoaded, addTeknisi, updateTeknisi, deleteTeknisi, resetToDefault } = useTeknisi();
-  
   const [searchQuery, setSearchQuery] = useState('');
+  const [areaFilter, setAreaFilter] = useState<string>('all');
+
+  const uniqueAreas = Array.from(
+    new Set(teknisiList.map(t => t.area).filter(Boolean))
+  ).sort();
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
@@ -158,11 +170,16 @@ const TeknisiManagement = () => {
     );
   }
 
-  const filteredTeknisi = teknisiList.filter((t) =>
-    t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.area.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.phone.includes(searchQuery)
-  );
+  const filteredTeknisi = teknisiList.filter(t => {
+    const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.area.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.phone.includes(searchQuery)
+    
+    const matchesArea = areaFilter === 'all' ? true : t.area === areaFilter;
+
+    return matchesSearch && matchesArea;
+  });
 
   const activeTeknisi = teknisiList.filter((t) => t.isActive);
   const inactiveTeknisi = teknisiList.filter((t) => !t.isActive);
@@ -363,7 +380,7 @@ const TeknisiManagement = () => {
                   resetForm();
                   setIsAddDialogOpen(true);
                 }}
-                className="gap-2 btn-ripple"
+                className="btn-ripple gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Tambah Teknisi
@@ -388,6 +405,22 @@ const TeknisiManagement = () => {
               className="pl-9 h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200"
             />
           </div>
+          <Select value={areaFilter} onValueChange={setAreaFilter}>
+            <SelectTrigger className="w-full sm:w-[200px] h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Filter className="w-4 h-4" />
+                <SelectValue placeholder="Filter Area" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="glass-card">
+              <SelectItem value="all">Semua Area</SelectItem>
+              {uniqueAreas.map((area) => (
+                <SelectItem key={area} value={area as string}>
+                  {area}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </motion.div>
 
         {/* Stats Cards */}

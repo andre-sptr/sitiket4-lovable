@@ -1,7 +1,7 @@
+import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { TicketStatus, TTRCompliance } from '@/types/ticket';
 import { getStatusLabel } from '@/lib/formatters';
-import { getSettings, getTTRStatus } from '@/hooks/useSettings';
 import { 
   Clock, 
   UserCheck, 
@@ -11,14 +11,32 @@ import {
   Lock, 
   Users, 
   CheckCircle2,
-  AlertTriangle 
+  AlertTriangle,
+  Timer
 } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+// --- Types ---
 
 interface StatusBadgeProps {
   status: TicketStatus;
   showIcon?: boolean;
   size?: 'sm' | 'default';
+  className?: string;
 }
+
+interface ComplianceBadgeProps {
+  compliance: TTRCompliance;
+  size?: 'sm' | 'default';
+}
+
+interface TTRBadgeProps {
+  targetDate?: Date | string | null; // Diganti menjadi targetDate untuk countdown
+  status: TicketStatus;
+  size?: 'sm' | 'default';
+}
+
+// --- Maps ---
 
 const statusVariantMap: Record<TicketStatus, 'open' | 'assigned' | 'onprogress' | 'pending' | 'temporary' | 'waiting' | 'closed'> = {
   OPEN: 'open',
@@ -44,11 +62,13 @@ const statusIconMap: Record<TicketStatus, React.ReactNode> = {
   CLOSED: <CheckCircle2 className="w-3 h-3" />,
 };
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, showIcon = true, size = 'default' }) => {
+// --- Components ---
+
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, showIcon = true, size = 'default', className }) => {
   return (
     <Badge 
       variant={statusVariantMap[status]} 
-      className={`gap-1.5 font-medium ${size === 'sm' ? 'text-[10px] px-2 py-0.5' : 'text-xs px-2.5 py-1'}`}
+      className={`gap-1.5 font-medium whitespace-nowrap ${size === 'sm' ? 'text-[10px] px-2 py-0.5 h-5' : 'text-xs px-2.5 py-1'} ${className}`}
     >
       {showIcon && statusIconMap[status]}
       {getStatusLabel(status)}
@@ -56,59 +76,71 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, showIcon = tru
   );
 };
 
-interface ComplianceBadgeProps {
-  compliance: TTRCompliance;
-  size?: 'sm' | 'default';
-}
-
 export const ComplianceBadge: React.FC<ComplianceBadgeProps> = ({ compliance, size = 'default' }) => {
   return (
     <Badge 
       variant={compliance === 'COMPLY' ? 'comply' : 'notcomply'}
-      className={`gap-1.5 font-medium ${size === 'sm' ? 'text-[10px] px-2 py-0.5' : 'text-xs px-2.5 py-1'}`}
+      className={`gap-1.5 font-medium whitespace-nowrap ${size === 'sm' ? 'text-[10px] px-2 py-0.5 h-5' : 'text-xs px-2.5 py-1'}`}
     >
-      {compliance === 'COMPLY' ? (
-        <CheckCircle2 className="w-3 h-3" />
-      ) : (
-        <AlertTriangle className="w-3 h-3" />
-      )}
+      {compliance === 'COMPLY' ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
       {compliance}
     </Badge>
   );
 };
 
-interface TTRBadgeProps {
-  hours: number;
-  size?: 'sm' | 'default';
-}
+export const TTRBadge: React.FC<TTRBadgeProps> = ({ targetDate, status, size = 'default' }) => {
+  const [timeLeft, setTimeLeft] = useState<{ text: string; isOverdue: boolean }>({ text: '-', isOverdue: false });
 
-export const TTRBadge: React.FC<TTRBadgeProps> = ({ hours, size = 'default' }) => {
-  const settings = getSettings();
-  const ttrStatus = getTTRStatus(hours, settings.ttrThresholds);
-  
-  const variantMap: Record<string, 'success' | 'warning' | 'critical'> = {
-    safe: 'success',
-    warning: 'warning',
-    critical: 'critical',
-    overdue: 'critical',
-  };
+  useEffect(() => {
+    if (status === 'CLOSED' || !targetDate) {
+      return;
+    }
 
-  const formatHours = (h: number) => {
-    const absH = Math.abs(h);
-    const hrs = Math.floor(absH);
-    const mins = Math.round((absH - hrs) * 60);
-    const sign = h < 0 ? '-' : '';
-    return `${sign}${hrs}j ${mins}m`;
-  };
+    const calculate = () => {
+      const now = new Date().getTime();
+      const target = new Date(targetDate).getTime();
+      const diff = target - now;
+      const isLate = diff < 0;
+      
+      const absDiff = Math.abs(diff);
+      const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((absDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+      let text = `${hours}j ${minutes}m`;
+      if (days > 0) text = `${days}h ${text}`;
+      if (isLate) text = `+${text}`; // Menandakan lewat waktu
+
+      setTimeLeft({ text, isOverdue: isLate });
+    };
+
+    calculate();
+    const interval = setInterval(calculate, 60000); // Update tiap menit cukup untuk badge
+    return () => clearInterval(interval);
+  }, [targetDate, status]);
+
+  if (status === 'CLOSED') {
+    return (
+      <Badge variant="outline" className={`gap-1.5 bg-muted/50 text-muted-foreground border-border ${size === 'sm' ? 'text-[10px] px-2 py-0.5 h-5' : 'text-xs px-2.5 py-1'}`}>
+        <CheckCircle2 className="w-3 h-3" />
+        Selesai
+      </Badge>
+    );
+  }
+
+  if (!targetDate) return null;
 
   return (
     <Badge 
-      variant={variantMap[ttrStatus]}
-      className={`font-mono gap-1.5 font-medium ${size === 'sm' ? 'text-[10px] px-2 py-0.5' : 'text-xs px-2.5 py-1'} ${ttrStatus === 'overdue' ? 'animate-pulse' : ''}`}
+      variant={timeLeft.isOverdue ? 'destructive' : 'default'}
+      className={`gap-1.5 font-mono whitespace-nowrap ${
+        timeLeft.isOverdue 
+          ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800 animate-pulse' 
+          : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-200'
+      } border ${size === 'sm' ? 'text-[10px] px-2 py-0.5 h-5' : 'text-xs px-2.5 py-1'}`}
     >
-      <Clock className="w-3 h-3" />
-      {formatHours(hours)}
-      {ttrStatus === 'overdue' && <span className="ml-0.5">OVERDUE</span>}
+      {timeLeft.isOverdue ? <AlertTriangle className="w-3 h-3" /> : <Timer className="w-3 h-3" />}
+      {timeLeft.isOverdue ? 'Overdue' : 'Sisa'}: {timeLeft.text}
     </Badge>
   );
 };

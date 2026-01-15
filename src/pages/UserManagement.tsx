@@ -21,7 +21,8 @@ import {
   Headphones,
   ShieldX,
   UserCircle,
-  RefreshCcw
+  RefreshCcw,
+  Filter
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -56,7 +57,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from 'react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { useEffect, useState } from 'react';
 import { User, UserRole } from '@/types/ticket';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -139,26 +148,41 @@ const UserManagement = () => {
   const { user: currentUser } = useAuth();
   const { users, isLoaded, addUser, updateUser, deleteUser, toggleUserActive } = useUsers();
   const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [formData, setFormData] = useState<UserFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   const isAdmin = currentUser?.role === 'admin';
 
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.area?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.area?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesRole = roleFilter === 'all' ? true : user.role === roleFilter;
+
+    return matchesSearch && matchesRole;
+  });
 
   const usersByRole = {
     admin: filteredUsers.filter(u => u.role === 'admin'),
     hd: filteredUsers.filter(u => u.role === 'hd'),
     guest: filteredUsers.filter(u => u.role === 'guest'),
   };
+
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
 
   const handleWhatsApp = (phone: string) => {
     const formatted = phone.replace(/\D/g, '').replace(/^0/, '62');
@@ -202,6 +226,11 @@ const UserManagement = () => {
 
     if (!editingUser && (!formData.password || formData.password.length < 6)) {
       toast.error('Password wajib diisi minimal 6 karakter');
+      return;
+    }
+
+    if (editingUser && formData.password && formData.password.length < 6) {
+      toast.error('Password baru minimal harus 6 karakter');
       return;
     }
     
@@ -292,13 +321,15 @@ const UserManagement = () => {
             </div>
           </div>
           {isAdmin && (
-            <Button 
-              className="gap-2 self-start btn-ripple" 
-              onClick={openAddDialog}
-            >
-              <Plus className="w-4 h-4" />
-              Tambah Pengguna
-            </Button>
+            <div className="flex gap-2 shrink-0">
+              <Button 
+                className="gap-2 self-start btn-ripple" 
+                onClick={openAddDialog}
+              >
+                <Plus className="w-4 h-4" />
+                Tambah Pengguna
+              </Button>
+            </div>
           )}
         </motion.div>
 
@@ -307,15 +338,32 @@ const UserManagement = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="relative max-w-sm"
+          className="flex flex-col sm:flex-row gap-4"
         >
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Cari nama, role, atau area..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200"
-          />
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Cari nama, role, atau area..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200"
+            />
+          </div>
+
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger className="w-full sm:w-[200px] h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Filter className="w-4 h-4" />
+                <SelectValue placeholder="Filter Role" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="glass-card">
+              <SelectItem value="all">Semua Role</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="hd">Help Desk</SelectItem>
+              <SelectItem value="guest">Guest</SelectItem>
+            </SelectContent>
+          </Select>
         </motion.div>
 
         {/* Stats Cards */}
@@ -412,7 +460,7 @@ const UserManagement = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   <AnimatePresence mode="popLayout">
-                    {filteredUsers.map((user, index) => {
+                    {paginatedUsers.map((user, index) => {
                       const Icon = roleIcons[user.role];
                       const roleColor = roleColors[user.role];
                       const iconColorClass = roleIconColors[user.role];
@@ -549,7 +597,7 @@ const UserManagement = () => {
                                     onClick={() => openDeleteDialog(user)}
                                   >
                                     <Trash2 className="w-4 h-4 mr-2" />
-                                    Hapus Permanen
+                                    Hapus
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -577,6 +625,49 @@ const UserManagement = () => {
                       <p className="text-sm mt-1">Coba ubah kata kunci pencarian</p>
                     </motion.div>
                   )}
+                </div>
+              )}
+
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-8">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          className={cn(
+                            "cursor-pointer select-none", 
+                            currentPage === 1 && "pointer-events-none opacity-50"
+                          )} 
+                        />
+                      </PaginationItem>
+                      
+                      {Array.from({ length: totalPages }).map((_, i) => {
+                        const pageNumber = i + 1;
+                        return (
+                          <PaginationItem key={i}>
+                            <PaginationLink
+                              isActive={pageNumber === currentPage}
+                              onClick={() => setCurrentPage(pageNumber)}
+                              className="cursor-pointer select-none"
+                            >
+                              {pageNumber}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      })}
+
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          className={cn(
+                            "cursor-pointer select-none", 
+                            currentPage === totalPages && "pointer-events-none opacity-50"
+                          )}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
                 </div>
               )}
             </CardContent>
@@ -625,21 +716,24 @@ const UserManagement = () => {
               />
             </div>
 
-            {!editingUser && (
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-xs font-medium text-muted-foreground">
-                  Password <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Minimal 6 karakter"
-                  value={formData.password || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  className="h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200"
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-xs font-medium text-muted-foreground">
+                Password
+                {!editingUser ? (
+                  <span className="text-destructive"> *</span>
+                ) : (
+                  <span className="text-muted-foreground ml-1 font-normal text-[10px]">(Opsional)</span>
+                )}
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder={editingUser ? "Password baru" : "Minimal 6 karakter"}
+                value={formData.password || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                className="h-10 bg-muted/50 border-transparent hover:border-border focus:border-primary/50 focus:bg-card transition-all duration-200"
+              />
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="name" className="text-xs font-medium text-muted-foreground">
